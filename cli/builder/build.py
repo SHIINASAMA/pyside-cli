@@ -5,7 +5,6 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import List
 
 from cli.builder.nuitka import build_nuitka_cmd
 from cli.builder.pyinstaller import build_pyinstaller_cmd
