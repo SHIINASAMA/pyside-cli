@@ -1,6 +1,6 @@
 [project]
 name = "pyside-cli"
-version = "0.3.1"
+version = "0.3.2"
 description = "A command-line tool for quickly creating and managing PySide6 projects."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -11,6 +11,14 @@ dependencies = [
     "singleton-decorator>=1.0.0",
     "toml>=0.10.2",
 ]
+authors = [
+    { name = "Kaoru", email = "shiinasama2001@gmail.com" }
+]
+
+[project.urls]
+"Homepage" = "https://github.com/SHIINASAMA/pyside-cli"
+"Repository" = "https://github.com/SHIINASAMA/pyside-cli"
+"Issues" = "https://github.com/SHIINASAMA/pyside-cli/issues"
 
 [dependency-groups]
 dev = [

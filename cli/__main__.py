@@ -63,7 +63,7 @@ def main():
         build_ui()
         build_i18n()
         build_assets()
-        gen_version_py(get_last_tag(ctx.toolchain))
+        gen_version_py(get_last_tag())
         gen_init_py()
     ctx.save_cache()
     if ctx.args.build or ctx.args.all:
