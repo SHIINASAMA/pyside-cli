@@ -5,9 +5,9 @@ from pathlib import Path
 
 from singleton_decorator import singleton
 
+from .args import get_parser
 from .pyproject import PyProjectConfig
 from .toolchain import Toolchain
-from cli.context.args import get_parser
 
 
 def _load_cache():
@@ -31,18 +31,31 @@ class Context:
     asset_list = []
     i18n_list = []
 
-    config = PyProjectConfig()
-    toolchain = Toolchain()
-
-    cache = _load_cache()
-
     def __init__(self):
         self.args = get_parser().parse_args()
         if self.args.backend_args and self.args.backend_args[0] == "--":
             self.args.backend_args = self.args.backend_args[1:]
+        else:
+            self.args.backend_args = []
+
+        self.config = PyProjectConfig()
+        if self.args.target:
+            self.target_name = self.args.target
+            if self.target_name not in self.config.scripts:
+                raise ValueError(f"Target '{self.target_name}' not found in pyproject.toml scripts.")
+            self.target_dir = self.config.scripts[self.target_name]
+            if not os.path.exists(self.target_dir):
+                raise ValueError(f"Target directory '{self.target_dir}' does not exist.")
+        else:
+            self.target_name = "App"
+            self.target_dir = "app"
+
+        self.toolchain = Toolchain()
+
+        self.cache = _load_cache()
 
     def glob_files(self):
-        root = Path("app")
+        root = Path(self.target_dir)
         assets_dir = root / "assets"
         i18n_dir = root / "i18n"
         exclude_dirs = [
@@ -66,8 +79,6 @@ class Context:
                 self.source_list.append(path)
             elif path.suffix == ".ui":
                 self.ui_list.append(path)
-
-
 
     def save_cache(self):
         # save cache

@@ -7,6 +7,7 @@ from concurrent.futures.process import ProcessPoolExecutor
 from pathlib import Path
 
 from cli.context.context import Context
+from cli.utils.subprocess import run_command
 
 
 def _compile_ui(uic, input_file: Path, output_file: Path):
@@ -18,12 +19,8 @@ def _compile_ui(uic, input_file: Path, output_file: Path):
         "-o",
         str(output_file)]
     logging.debug(" ".join(cmd))
-    shell_mode = os.name == "nt"
     try:
-        result = subprocess.run(
-            cmd,
-            shell=shell_mode
-        )
+        result = run_command(cmd)
         success = result.returncode == 0
         if not success:
             logging.debug(result.stderr)
@@ -44,8 +41,8 @@ def build_ui():
         logging.warning("PySide6 uic not found, exiting.")
         sys.exit(-1)
 
-    ui_dir = Path("app/ui")
-    res_dir = Path("app/resources")
+    ui_dir = Path(f"{ctx.target_dir}/ui")
+    res_dir = Path(f"{ctx.target_dir}/resources")
 
     if not ui_list:
         logging.info("No ui files found, skipping ui conversion.")
@@ -117,8 +114,8 @@ def build_assets():
         logging.warning('PySide6 rcc not found, exiting.')
         sys.exit(-1)
 
-    assets_dir = Path('app/assets')
-    res_dir = Path('app/resources')
+    assets_dir = Path(f'{ctx.target_dir}/assets')
+    res_dir = Path(f'{ctx.target_dir}/resources')
     qrc_file = res_dir / 'assets.qrc'
     py_res_file = res_dir / 'resource.py'
 
@@ -157,7 +154,7 @@ def build_assets():
             for asset in asset_list:
                 posix_path = asset.as_posix()
                 # remove the leading "app/assets/" from the path
-                alias = posix_path[len('app/assets/'):]
+                alias = posix_path[len(f'{ctx.target_dir}/assets/'):]
                 # rel_path is the path relative to app/resources
                 rel_path = os.path.relpath(asset, res_dir)
                 f.write(f'    <file alias="{alias}">{rel_path}</file>\n')
@@ -173,11 +170,7 @@ def build_assets():
             str(py_res_file)
         ]
         logging.debug(" ".join(cmd))
-        shell_mode = os.name == "nt"
-        result = subprocess.run(
-            cmd,
-            shell=shell_mode
-        )
+        result = run_command(cmd)
         if 0 != result.returncode:
             logging.error('Failed to convert assets.qrc.')
             exit(1)
@@ -248,12 +241,8 @@ def _compile_qm(lrelease, input_file: Path, output_file: Path):
         "-qm",
         str(output_file)]
     logging.debug(" ".join(cmd))
-    shell_mode = os.name == "nt"
     try:
-        result = subprocess.run(
-            cmd,
-            shell=shell_mode
-        )
+        result = run_command(cmd)
         success = result.returncode == 0
         if not success:
             logging.debug(result.stderr)
@@ -277,7 +266,7 @@ def build_i18n():
         logging.warning("PySide6 lrelease not found, skipping i18n compilation.")
         return
 
-    qm_root = Path("app/assets/i18n")
+    qm_root = Path(f"{ctx.target_dir}/assets/i18n")
     qm_root.mkdir(parents=True, exist_ok=True)
 
     logging.info("Compiling translation files...")
@@ -332,7 +321,9 @@ def build_i18n():
 
 def gen_init_py():
     """Create __init__.py in every subdirectory if not exists"""
-    root = Path("app/resources")
+    ctx = Context()
+
+    root = Path(f"{ctx.target_dir}/resources")
     init_file = root / "__init__.py"
     if not init_file.exists():
         init_file.touch()

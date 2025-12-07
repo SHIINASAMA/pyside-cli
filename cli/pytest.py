@@ -1,8 +1,7 @@
 import logging
-import os
-import subprocess
 
 from cli.context.context import Context
+from cli.utils.subprocess import run_command
 
 
 def run_test():
@@ -15,6 +14,5 @@ def run_test():
         return -1
     cmd = ['pytest'] + args.backend_args
     logging.debug(' '.join(cmd))
-    shell_mode = os.name == "nt"
-    result = subprocess.run(cmd, shell=shell_mode)
+    result = run_command(cmd)
     return result.returncode

@@ -10,6 +10,7 @@ import toml
 from glom import assign, delete, glom
 
 from cli.context.context import Context
+from cli.utils.subprocess import run_command
 
 
 def _remove_readonly(func, path, _):
@@ -37,13 +38,11 @@ def create():
 
     logging.info(f"Creating ...")
 
-    shell_mode = os.name == "nt"
-    rt = subprocess.run([
+    rt = run_command([
         toolchain.git_executable,
         'clone',
         'https://github.com/SHIINASAMA/pyside_template.git',
-        dst],
-        shell=shell_mode
+        dst]
     )
     if rt.returncode:
         logging.error('Failed to clone template.')

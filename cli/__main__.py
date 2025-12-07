@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 
 import colorama
@@ -43,11 +42,7 @@ def main():
         create()
         sys.exit(0)
 
-    # check working directory
-    # if 'app' is not in the current working directory, exit
-    if not os.path.exists('app'):
-        logging.error('Please run this script from the project root directory.')
-        sys.exit(1)
+    logging.info("Detected target: %s -> %s", ctx.target_name, ctx.target_dir)
 
     if ctx.args.test:
         code = run_test()
