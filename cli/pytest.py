@@ -2,10 +2,14 @@ import logging
 import os
 import subprocess
 
-from cli.toolchain import Toolchain
+from cli.context.context import Context
 
 
-def run_test(toolchain: Toolchain, args):
+def run_test():
+    ctx = Context()
+    toolchain = ctx.toolchain
+    args = ctx.args
+
     if toolchain.pytest_executable is None:
         logging.warning("Pytest executable not found, skipping test.")
         return -1

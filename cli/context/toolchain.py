@@ -21,20 +21,6 @@ def _add_path():
     os.environ["PATH"] += appended_path
 
 
-def find_toolchain():
-    _add_path()
-    toolchain = Toolchain()
-    toolchain.git_executable = shutil.which("git")
-    toolchain.uic_executable = shutil.which("pyside6-uic")
-    toolchain.rcc_executable = shutil.which("pyside6-rcc")
-    toolchain.lupdate_executable = shutil.which("lupdate")
-    toolchain.lrelease_executable = shutil.which("lrelease")
-    toolchain.nuitka_executable = shutil.which("nuitka")
-    toolchain.pyinstaller_executable = shutil.which("pyinstaller")
-    toolchain.pytest_executable = shutil.which("pytest")
-    return toolchain
-
-
 class Toolchain:
     git_executable = None
     uic_executable = None
@@ -44,6 +30,17 @@ class Toolchain:
     nuitka_executable = None
     pyinstaller_executable = None
     pytest_executable = None
+
+    def __init__(self):
+        _add_path()
+        self.git_executable = shutil.which("git")
+        self.uic_executable = shutil.which("pyside6-uic")
+        self.rcc_executable = shutil.which("pyside6-rcc")
+        self.lupdate_executable = shutil.which("lupdate")
+        self.lrelease_executable = shutil.which("lrelease")
+        self.nuitka_executable = shutil.which("nuitka")
+        self.pyinstaller_executable = shutil.which("pyinstaller")
+        self.pytest_executable = shutil.which("pytest")
 
     def print_toolchain(self):
         logging.info("Found toolchain:")

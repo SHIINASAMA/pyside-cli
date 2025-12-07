@@ -9,7 +9,7 @@ from pathlib import Path
 import toml
 from glom import assign, delete, glom
 
-from cli.toolchain import Toolchain
+from cli.context.context import Context
 
 
 def _remove_readonly(func, path, _):
@@ -21,7 +21,11 @@ def _remove_git(path: Path):
     shutil.rmtree(path, onerror=_remove_readonly)
 
 
-def create(toolchain: Toolchain, name: str):
+def create():
+    ctx = Context()
+    toolchain = ctx.toolchain
+    name = ctx.args.create
+
     dst = name
     if name == '.':
         name = Path.cwd().name

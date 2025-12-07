@@ -1,11 +1,14 @@
 import logging
 import subprocess
 
-from cli.toolchain import Toolchain
+from cli.context.context import Context
 
 
-def get_last_tag(toolchain: Toolchain, default="0.0.0.0") -> str:
+def get_last_tag(default="0.0.0.0") -> str:
     """Get the last git tag as version, or return default if not found."""
+    ctx = Context()
+    toolchain = ctx.toolchain
+
     if toolchain.git_executable is None:
         logging.warning("Git executable not found, skipping get tag.")
         return default

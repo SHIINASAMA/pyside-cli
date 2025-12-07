@@ -8,8 +8,8 @@ from pathlib import Path
 
 from cli.builder.nuitka import build_nuitka_cmd
 from cli.builder.pyinstaller import build_pyinstaller_cmd
-from cli.pyproject import PyProjectConfig
-from cli.toolchain import Toolchain
+
+from cli.context.context import Context
 
 
 def gen_version_py(version):
@@ -34,8 +34,13 @@ def gen_filelist(root_dir: str, filelist_name: str):
         f.write("\n")
 
 
-def build(toolchain: Toolchain, args, config: PyProjectConfig):
+def build():
     """call nuitka to build the app"""
+    ctx = Context()
+    toolchain = ctx.toolchain
+    args = ctx.args
+    config = ctx.config
+
     if sys.platform != 'win32':
         path = Path('build/App')
         if path.exists() and path.is_dir():

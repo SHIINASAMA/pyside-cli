@@ -5,30 +5,22 @@ import sys
 import colorama
 from colorlog import ColoredFormatter
 
-from cli.args import get_parser
 from cli.builder.build import gen_version_py, build
 from cli.builder.qt import build_i18n_ts, build_i18n, build_ui, build_assets, gen_init_py
-from cli.cache import load_cache, save_cache
+from cli.context.context import Context
 from cli.create import create
 from cli.git import get_last_tag
-from cli.glob import glob_files
-from cli.pyproject import PyProjectConfig
 from cli.pytest import run_test
-from cli.toolchain import find_toolchain
 
 
 def main():
-    source_list = []
-    ui_list = []
-    asset_list = []
-    i18n_list = []
-    config = None
-    cache = {}
+    ctx = Context()
 
     if sys.platform == "win32":
         colorama.just_fix_windows_console()
 
-    logging.getLogger().setLevel(logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     handler.setFormatter(ColoredFormatter(
         fmt='%(log_color)s%(asctime)s - %(levelname)s - %(message)s',
@@ -40,21 +32,15 @@ def main():
             'CRITICAL': 'bold_red',
         }
     ))
-    logging.getLogger().addHandler(handler)
+    logger.handlers = []
+    logger.addHandler(handler)
 
-    args = get_parser().parse_args()
-    if args.backend_args and args.backend_args[0] == "--":
-        args.backend_args = args.backend_args[1:]
-
-    if args.debug:
+    if ctx.args.debug:
+        logger.setLevel(logging.DEBUG)
         logging.info('Debug mode enabled.')
-        logging.getLogger().setLevel(logging.DEBUG)
 
-    toolchain = find_toolchain()
-    toolchain.print_toolchain()
-
-    if args.create:
-        create(toolchain, args.create)
+    if ctx.args.create:
+        create()
         sys.exit(0)
 
     # check working directory
@@ -63,50 +49,30 @@ def main():
         logging.error('Please run this script from the project root directory.')
         sys.exit(1)
 
-    if args.test:
-        code = run_test(toolchain, args)
+    if ctx.args.test:
+        code = run_test()
         sys.exit(code)
     else:
-        (asset_list,
-         i18n_list,
-         source_list,
-         ui_list) = glob_files()
-        config = PyProjectConfig()
+        ctx.glob_files()
+        logging.debug("Source list: %s", [str(x) for x in ctx.source_list])
+        logging.debug("UI list: %s", [str(x) for x in ctx.ui_list])
+        logging.debug("Asset list: %s", [str(x) for x in ctx.asset_list])
+        logging.debug("I18n list: %s", [str(x) for x in ctx.i18n_list])
 
-    if not args.no_cache:
-        cache = load_cache()
+    if ctx.args.no_cache:
+        ctx.cache = {}
 
-    if args.i18n:
-        build_i18n_ts(
-            toolchain=toolchain,
-            lang_list=config.lang_list,
-            cache=cache,
-            files_to_scan=[str(f) for f in ui_list + source_list]
-        )
-    if args.rc or args.all:
-        build_ui(
-            toolchain=toolchain,
-            ui_list=ui_list,
-            cache=cache,
-            low_perf_mode=args.low_perf
-        )
-        build_i18n(
-            toolchain=toolchain,
-            i18n_list=i18n_list,
-            cache=cache,
-            low_perf_mode=args.low_perf
-        )
-        build_assets(
-            toolchain=toolchain,
-            asset_list=asset_list,
-            cache=cache,
-            no_cache=args.no_cache
-        )
-        gen_version_py(get_last_tag(toolchain))
+    if ctx.args.i18n:
+        build_i18n_ts()
+    if ctx.args.rc or ctx.args.all:
+        build_ui()
+        build_i18n()
+        build_assets()
+        gen_version_py(get_last_tag(ctx.toolchain))
         gen_init_py()
-    save_cache(cache)
-    if args.build or args.all:
-        build(toolchain, args, config)
+    ctx.save_cache()
+    if ctx.args.build or ctx.args.all:
+        build()
 
 
 if __name__ == '__main__':
