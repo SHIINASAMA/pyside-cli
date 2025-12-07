@@ -37,7 +37,7 @@ def get_parser():
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug mode, which will output more information during the build process')
 
-    parser.add_argument('--backend_args', nargs=argparse.REMAINDER,
+    parser.add_argument('--backend_args', nargs=argparse.REMAINDER, default=[],
                         help='Additional arguments for the build backend, e.g. -- --xxx=xxx')
 
     return parser

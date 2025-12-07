@@ -1,5 +1,6 @@
 import logging
 import sys
+from pathlib import Path
 
 import colorama
 from colorlog import ColoredFormatter
@@ -34,6 +35,7 @@ def main():
     logger.handlers = []
     logger.addHandler(handler)
 
+    logging.info(f'Working directory: {Path.cwd()}')
     if ctx.args.debug:
         logger.setLevel(logging.DEBUG)
         logging.info('Debug mode enabled.')
@@ -42,12 +44,12 @@ def main():
         create()
         sys.exit(0)
 
-    logging.info("Detected target: %s -> %s", ctx.target_name, ctx.target_dir)
-
     if ctx.args.test:
         code = run_test()
         sys.exit(code)
     else:
+        ctx.detect_target()
+        logging.info("Detected target: %s -> %s", ctx.target_name, ctx.target_dir)
         ctx.glob_files()
         logging.debug("Source list: %s", [str(x) for x in ctx.source_list])
         logging.debug("UI list: %s", [str(x) for x in ctx.ui_list])

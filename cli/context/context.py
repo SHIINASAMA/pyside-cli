@@ -31,14 +31,19 @@ class Context:
     asset_list = []
     i18n_list = []
 
+    target_name = "App"
+    target_dir = "app"
+
     def __init__(self):
-        self.args = get_parser().parse_args()
+        self.args, self.args.backend_args = get_parser().parse_known_args()
         if self.args.backend_args and self.args.backend_args[0] == "--":
             self.args.backend_args = self.args.backend_args[1:]
-        else:
-            self.args.backend_args = []
 
         self.config = PyProjectConfig()
+        self.toolchain = Toolchain()
+        self.cache = _load_cache()
+
+    def detect_target(self):
         if self.args.target:
             self.target_name = self.args.target
             if self.target_name not in self.config.scripts:
@@ -46,13 +51,6 @@ class Context:
             self.target_dir = self.config.scripts[self.target_name]
             if not os.path.exists(self.target_dir):
                 raise ValueError(f"Target directory '{self.target_dir}' does not exist.")
-        else:
-            self.target_name = "App"
-            self.target_dir = "app"
-
-        self.toolchain = Toolchain()
-
-        self.cache = _load_cache()
 
     def glob_files(self):
         root = Path(self.target_dir)
