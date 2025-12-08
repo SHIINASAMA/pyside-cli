@@ -24,7 +24,7 @@ def get_parser():
     package_format_group.add_argument('--onedir', action='store_true',
                                       help='(for build) Create a directory with the executable and all dependencies')
 
-    parser.add_argument('-t', '--target', type=str, metavar='TARGET', help='Build target (default: App)')
+    parser.add_argument('-t', '--target', type=str, metavar='TARGET', help='(for build) Build target (default: App)')
 
     parser.add_argument('--backend', metavar='BACKEND', type=str, help='(for build) Backend to use (Default: nuitka)',
                         choices=['nuitka', 'pyinstaller'], default='nuitka')

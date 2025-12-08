@@ -44,6 +44,10 @@ def main():
         create()
         sys.exit(0)
 
+    if ctx.args.targets:
+        logging.info(f"Available build targets: {[x for x in ctx.config.scripts.keys()]}")
+        sys.exit(0)
+
     if ctx.args.test:
         code = run_test()
         sys.exit(code)
