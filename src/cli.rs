@@ -1,4 +1,7 @@
 use clap::{Parser, Subcommand, ValueEnum};
+use log::LevelFilter;
+
+use crate::errcode::Errcode;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -9,6 +12,10 @@ use clap::{Parser, Subcommand, ValueEnum};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
+
+    /// Enable debug mode
+    #[arg(long)]
+    pub debug: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -61,10 +68,6 @@ pub struct BuildOptions {
     #[arg(long)]
     pub no_cache: bool,
 
-    /// Enable debug mode
-    #[arg(long)]
-    pub debug: bool,
-
     /// Additional arguments for the build backend
     #[arg(last = true)]
     pub backend_args: Vec<String>,
@@ -74,4 +77,16 @@ pub struct BuildOptions {
 pub enum Backend {
     Nuitka,
     Pyinstaller,
+}
+
+pub fn parse_cli() -> Result<Cli, Errcode> {
+    let cli = Cli::parse();
+    let mut logger_mode = LevelFilter::Info;
+    if cli.debug {
+        logger_mode = LevelFilter::Debug;
+    }
+    env_logger::Builder::from_default_env()
+        .filter(None, logger_mode)
+        .init();
+    Ok(cli)
 }
