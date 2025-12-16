@@ -5,11 +5,6 @@ description = "A command-line tool for quickly creating and managing PySide6 pro
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    "colorama>=0.4.6",
-    "colorlog>=6.9.0",
-    "glom>=24.11.0",
-    "singleton-decorator>=1.0.0",
-    "toml>=0.10.2",
 ]
 authors = [
     { name = "Kaoru", email = "shiinasama2001@gmail.com" }
@@ -26,11 +21,9 @@ dev = [
     "pyinstaller>=6.16.0",
     "pyside6>=6.6.3.1",
     "pytest>=8.3.5",
+    "maturin>=1.0,<2.0"
 ]
 
-[project.scripts]
-pyside-cli = "cli.__main__:main"
-
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = [ "maturin" ]
+build-backend = "maturin"

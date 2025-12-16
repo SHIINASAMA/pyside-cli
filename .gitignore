@@ -13,3 +13,8 @@ wheels/
 .idea/
 .vscode/
 .vs/
+
+
+# Added by cargo
+
+/target
