@@ -1,10 +1,10 @@
+mod app;
 mod cli;
 mod context;
 mod errcode;
 
-use crate::{cli::parse_cli, context::context::Context};
+use crate::{app::run, errcode::exit_with_error};
 
 fn main() {
-    let _args = parse_cli();
-    let _context = Context::new();
+    exit_with_error(run());
 }

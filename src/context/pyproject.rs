@@ -1,3 +1,4 @@
+use std::fs::read_to_string;
 use std::{collections::HashMap, path::PathBuf};
 
 use serde::Deserialize;
@@ -25,8 +26,16 @@ struct Tool {
 struct PySideCli {
     pub i18n: Option<I18n>,
 
+    pub pyinstaller: Option<PyInstaller>,
+
     #[serde(flatten)]
-    pub platforms: HashMap<String, toml::Value>,
+    pub options: HashMap<String, toml::Value>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PyInstaller {
+    #[serde(flatten)]
+    pub options: HashMap<String, toml::Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -35,17 +44,88 @@ struct I18n {
 }
 
 pub struct PyProjectConfig {
+    pub scripts: HashMap<String, PathBuf>,
     pub languages: Vec<String>,
     pub extra_nuitka_options_list: Vec<String>,
+    pub extra_pyinstaller_options_list: Vec<String>,
 }
 
+use crate::errcode::PyProjectErrorKind;
+
 impl PyProjectConfig {
-    pub fn new(cfg: &PyProject) -> Self {
+    pub fn new(path: PathBuf) -> Result<Self, Errcode> {
+        let toml_content = read_to_string(path)
+            .map_err(|_| Errcode::PyProjectConfigError(PyProjectErrorKind::ReadFaild))?;
+        let cfg: PyProject = toml::from_str(&toml_content)
+            .map_err(|_| Errcode::PyProjectConfigError(PyProjectErrorKind::ParseFailed))?;
+
         let platform = std::env::consts::OS;
-        Self {
-            languages: Self::get_languages(cfg).unwrap_or_default().to_vec(),
-            extra_nuitka_options_list: Self::get_extra_nuitka_options_for_platform(cfg, platform),
+
+        let scripts = Self::parse_scripts(&cfg)?;
+
+        Ok(Self {
+            scripts: scripts,
+            languages: Self::get_languages(&cfg).unwrap_or_default().to_vec(),
+            extra_nuitka_options_list: Self::get_extra_nuitka_options_for_platform(&cfg, platform)
+                .unwrap_or_default()
+                .to_vec(),
+            extra_pyinstaller_options_list: Self::get_extra_pyinstaller_options_for_platform(
+                &cfg, platform,
+            )
+            .unwrap_or_default()
+            .to_vec(),
+        })
+    }
+
+    fn resolve_package_path(entry_point: &str) -> String {
+        // Split the entry point to get the module path (before the colon)
+        let module_path = entry_point.split(':').next().unwrap_or("");
+        let parts: Vec<&str> = module_path.split('.').collect();
+
+        // Find the deepest package that exists (contains __init__.py)
+        for i in (1..=parts.len()).rev() {
+            let package_name = parts[..i].join(".");
+            let package_dir: PathBuf = package_name.replace('.', "/").into();
+            let init_file = package_dir.join("__init__.py");
+
+            if init_file.exists() {
+                return package_name;
+            }
         }
+
+        // If no package with __init__.py found, return the first part
+        parts.first().map(|s| s.to_string()).unwrap_or_default()
+    }
+
+    fn parse_scripts(config: &PyProject) -> Result<HashMap<String, PathBuf>, Errcode> {
+        let raw_scripts = match Self::get_scripts(&config) {
+            Some(scripts) => scripts,
+            None => {
+                return Err(Errcode::PyProjectConfigError(
+                    PyProjectErrorKind::MissingField,
+                ));
+            }
+        };
+
+        let mut result = HashMap::new();
+
+        for (name, entry_point) in raw_scripts {
+            // Resolve package name, e.g. "cli.__main__:main" -> "cli"
+            let package_name = Self::resolve_package_path(entry_point);
+
+            if package_name.is_empty() {
+                return Err(Errcode::PyProjectConfigError(
+                    PyProjectErrorKind::MissingField,
+                ));
+            }
+
+            // Convert package name to path: cli.sub -> cli/sub
+            let package_path: PathBuf = package_name.replace('.', "/").into();
+
+            result.insert(name.clone(), package_path);
+        }
+
+        Ok(result)
     }
 
     fn flatten_backend_options(cfg: &[(&String, &toml::Value)]) -> Vec<String> {
@@ -70,12 +150,10 @@ impl PyProjectConfig {
         opts
     }
 
-    fn get_extra_nuitka_options_for_platform(config: &PyProject, platform: &str) -> Vec<String> {
-        let platforms = match &config.tool.as_ref().and_then(|t| t.pyside_cli.as_ref()) {
-            Some(cli) => &cli.platforms,
-            None => return Vec::new(),
-        };
-
+    fn get_extra_options_for_platfrom(
+        values: &HashMap<String, toml::Value>,
+        platform: &str,
+    ) -> Vec<String> {
         let key = match platform {
             "windows" => "win32",
             "linux" => "linux",
@@ -85,18 +163,43 @@ impl PyProjectConfig {
 
         let mut opts = Vec::new();
 
-        let non_tables: Vec<(&String, &toml::Value)> = platforms
+        let non_tables: Vec<(&String, &toml::Value)> = values
             .iter()
             .filter(|(_, v)| v.as_table().is_none())
             .collect();
         opts.append(&mut Self::flatten_backend_options(&non_tables));
 
-        if let Some(toml::Value::Table(table)) = platforms.get(key) {
+        if let Some(toml::Value::Table(table)) = values.get(key) {
             let platform_entries: Vec<(&String, &toml::Value)> = table.iter().collect();
             opts.append(&mut Self::flatten_backend_options(&platform_entries));
         }
 
         opts
+    }
+
+    fn get_extra_nuitka_options_for_platform(
+        config: &PyProject,
+        platform: &str,
+    ) -> Option<Vec<String>> {
+        let platforms = &config.tool.as_ref()?.pyside_cli.as_ref()?.options;
+
+        Some(Self::get_extra_options_for_platfrom(platforms, platform))
+    }
+
+    fn get_extra_pyinstaller_options_for_platform(
+        config: &PyProject,
+        platform: &str,
+    ) -> Option<Vec<String>> {
+        let platforms = &config
+            .tool
+            .as_ref()?
+            .pyside_cli
+            .as_ref()?
+            .pyinstaller
+            .as_ref()?
+            .options;
+
+        Some(Self::get_extra_options_for_platfrom(&platforms, platform))
     }
 
     fn get_languages<'a>(config: &'a PyProject) -> Option<&'a [String]> {
@@ -110,18 +213,14 @@ impl PyProjectConfig {
             .languages
             .as_deref()
     }
-}
 
-use std::fs;
-
-pub fn read_pyconfig(path: PathBuf) -> Result<PyProjectConfig, Errcode> {
-    let toml_content = fs::read_to_string(path).unwrap();
-    let project: PyProject = toml::from_str(&toml_content).unwrap();
-    let config = PyProjectConfig::new(&project);
-    return Ok(config);
+    fn get_scripts<'a>(config: &'a PyProject) -> Option<&'a HashMap<String, String>> {
+        config.project.as_ref()?.scripts.as_ref()
+    }
 }
 
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]
@@ -155,21 +254,27 @@ mod tests {
 
         let config: PyProject = toml::from_str(pyproject_toml).unwrap();
         let windows_options =
-            PyProjectConfig::get_extra_nuitka_options_for_platform(&config, "windows");
+            PyProjectConfig::get_extra_nuitka_options_for_platform(&config, "windows")
+                .unwrap_or_default()
+                .to_vec();
         assert!(
             windows_options.contains(&"--windows-flag".to_string()),
             "Windows options missing"
         );
 
         let linux_options =
-            PyProjectConfig::get_extra_nuitka_options_for_platform(&config, "linux");
+            PyProjectConfig::get_extra_nuitka_options_for_platform(&config, "linux")
+                .unwrap_or_default()
+                .to_vec();
         assert!(
             linux_options.contains(&"--linux-flag".to_string()),
             "Linux options missing"
         );
 
         let macos_options =
-            PyProjectConfig::get_extra_nuitka_options_for_platform(&config, "darwin");
+            PyProjectConfig::get_extra_nuitka_options_for_platform(&config, "darwin")
+                .unwrap_or_default()
+                .to_vec();
         assert!(
             macos_options.contains(&"--macos-flag".to_string()),
             "MacOS options missing"

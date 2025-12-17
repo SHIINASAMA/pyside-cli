@@ -9,13 +9,21 @@ use crate::errcode::Errcode;
     about = "Test and build your app",
     arg_required_else_help = true
 )]
-pub struct Cli {
+pub struct Args {
     #[command(subcommand)]
     pub command: Command,
 
     /// Enable debug mode
     #[arg(long)]
     pub debug: bool,
+
+    /// Change working directory
+    #[arg(long, value_name = "DIR")]
+    pub work_dir: Option<String>,
+
+    /// Use low performance mode
+    #[arg(long)]
+    pub low_perf: bool,
 }
 
 #[derive(Subcommand, Debug)]
@@ -60,10 +68,6 @@ pub struct BuildOptions {
     #[arg(long, value_enum, default_value_t = Backend::Nuitka)]
     pub backend: Backend,
 
-    /// Use low performance mode
-    #[arg(long)]
-    pub low_perf: bool,
-
     /// Ignore existing caches
     #[arg(long)]
     pub no_cache: bool,
@@ -79,8 +83,8 @@ pub enum Backend {
     Pyinstaller,
 }
 
-pub fn parse_cli() -> Result<Cli, Errcode> {
-    let cli = Cli::parse();
+pub fn parse_cli() -> Result<Args, Errcode> {
+    let cli = Args::parse();
     let mut logger_mode = LevelFilter::Info;
     if cli.debug {
         logger_mode = LevelFilter::Debug;
