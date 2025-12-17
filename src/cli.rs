@@ -26,7 +26,7 @@ pub struct Args {
     pub low_perf: bool,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Command {
     /// Convert rc files and build the app
     All(BuildOptions),
@@ -35,13 +35,13 @@ pub enum Command {
     Build(BuildOptions),
 
     /// Generate translation files (.ts) for all languages
-    I18n,
+    I18n(I18nOptions),
 
     /// Convert rc files to python files
-    Rc,
+    Rc(RcOptions),
 
     /// Run tests
-    Test,
+    Test(TestOptions),
 
     /// List all available build targets
     Targets,
@@ -50,7 +50,7 @@ pub enum Command {
     Create { name: String },
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct BuildOptions {
     /// Create a single executable file
     #[arg(long, conflicts_with = "onedir")]
@@ -81,6 +81,31 @@ pub struct BuildOptions {
 pub enum Backend {
     Nuitka,
     Pyinstaller,
+}
+
+#[derive(Parser, Debug, Clone)]
+pub struct I18nOptions {
+    /// Target to glob i18n files for (default: App)
+    #[arg(short, long, value_name = "TARGET", default_value_t = String::from("App"))]
+    pub target: String,
+}
+
+#[derive(Parser, Debug, Clone)]
+pub struct RcOptions {
+    /// Target to generate resource files for (default: App)
+    #[arg(short, long, value_name = "TARGET", default_value_t = String::from("App"))]
+    pub target: String,
+
+    /// Ignore existing caches
+    #[arg(long)]
+    pub no_cache: bool,
+}
+
+#[derive(Parser, Debug, Clone)]
+pub struct TestOptions {
+    /// Additional arguments for the pytest
+    #[arg(last = true)]
+    pub backend_args: Vec<String>,
 }
 
 pub fn parse_cli() -> Result<Args, Errcode> {

@@ -17,6 +17,7 @@ pub enum PyProjectErrorKind {
 pub enum Errcode {
     InvalidArgument(InvalidArgumentKind),
     PyProjectConfigError(PyProjectErrorKind),
+    IoError(std::io::Error),
 }
 
 impl fmt::Display for Errcode {
