@@ -3,6 +3,7 @@ use std::fmt;
 #[derive(Debug, Copy, Clone)]
 pub enum InvalidArgumentKind {
     WorkDirNotFound,
+    TargetNotFound,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -12,12 +13,18 @@ pub enum PyProjectErrorKind {
     MissingField,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum I18nErrorKind {
+    CreateFailed,
+    LUpdateFailed,
+}
+
 #[derive(Debug)]
 #[allow(unused)]
 pub enum Errcode {
     InvalidArgument(InvalidArgumentKind),
     PyProjectConfigError(PyProjectErrorKind),
-    IoError(std::io::Error),
+    I18nError(I18nErrorKind),
 }
 
 impl fmt::Display for Errcode {
