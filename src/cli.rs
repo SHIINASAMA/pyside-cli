@@ -28,17 +28,11 @@ pub struct Args {
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum Command {
-    /// Convert rc files and build the app
-    All(BuildOptions),
-
     /// Build the app
     Build(BuildOptions),
 
     /// Generate translation files (.ts) for all languages
     I18n(I18nOptions),
-
-    /// Convert rc files to python files
-    Rc(RcOptions),
 
     /// Run tests
     Test(TestOptions),
@@ -52,29 +46,47 @@ pub enum Command {
 
 #[derive(Parser, Debug, Clone)]
 pub struct BuildOptions {
-    /// Create a single executable file
+    /// Select a stage to build (default: All)
+    #[arg(long, value_enum, default_value_t = BuildStage::All)]
+    pub stage: BuildStage,
+
+    /// Create a single executable file.
     #[arg(long, conflicts_with = "onedir")]
     pub onefile: bool,
 
-    /// Create a directory with the executable and all dependencies
+    /// Create a directory with the executable and all dependencies.
     #[arg(long, conflicts_with = "onefile")]
     pub onedir: bool,
 
-    /// Build target (default: App)
-    #[arg(short, long, value_name = "TARGET")]
-    pub target: Option<String>,
+    /// Build target (default: App).
+    #[arg(short, long, value_name = "TARGET", default_value_t = String::from("App"))]
+    pub target: String,
 
-    /// Backend to use
+    /// Backend to use.
     #[arg(long, value_enum, default_value_t = Backend::Nuitka)]
     pub backend: Backend,
 
-    /// Ignore existing caches
+    /// Ignore existing caches.
     #[arg(long)]
     pub no_cache: bool,
 
-    /// Additional arguments for the build backend
+    /// Additional arguments for the build backend.
     #[arg(last = true)]
     pub backend_args: Vec<String>,
+}
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum BuildStage {
+    /// Only compile translation files (.ts) to .qm files.
+    I18n,
+    /// Only convert .ui files to .py files.
+    Ui,
+    /// Only convert assets files into resource.py.
+    Assets,
+    /// Only build the app.
+    Build,
+    /// Build all stages.
+    All,
 }
 
 #[derive(ValueEnum, Debug, Clone)]
@@ -88,17 +100,6 @@ pub struct I18nOptions {
     /// Target to glob i18n files for (default: App)
     #[arg(short, long, value_name = "TARGET", default_value_t = String::from("App"))]
     pub target: String,
-}
-
-#[derive(Parser, Debug, Clone)]
-pub struct RcOptions {
-    /// Target to generate resource files for (default: App)
-    #[arg(short, long, value_name = "TARGET", default_value_t = String::from("App"))]
-    pub target: String,
-
-    /// Ignore existing caches
-    #[arg(long)]
-    pub no_cache: bool,
 }
 
 #[derive(Parser, Debug, Clone)]

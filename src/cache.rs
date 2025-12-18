@@ -51,5 +51,6 @@ pub fn load_cache() -> Cache {
 pub fn save_cache(cache: &Cache) -> std::io::Result<()> {
     let json = serde_json::to_string_pretty(cache)?;
     fs::write(".cache/assets.json", json)?;
+    log::info!("Cache saved.");
     Ok(())
 }
