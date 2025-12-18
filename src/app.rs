@@ -3,6 +3,9 @@ use std::time::Instant;
 
 use comfy_table::{Table, presets::UTF8_FULL};
 
+use crate::cache::{Cache, save_cache};
+use crate::errcode::{CacheErrorKind, ToolchainErrorKind};
+use crate::qt::i18n::compile_i18n_ts_files;
 use crate::{
     cache::load_cache,
     cli::{Command, parse_cli},
@@ -59,7 +62,32 @@ pub fn run() -> Result<(), Errcode> {
             log::info!("Generating i18n files...");
             let start = Instant::now();
             generate_i18n_ts_files(root, &lupdate, &files, pyproject_config.languages)?;
-            log::info!("i18n files generated in {}ms", start.elapsed().as_millis());
+            log::info!("I18n files generated in {}ms.", start.elapsed().as_millis());
+        }
+        Command::Rc(opt) => {
+            let toolchain = Toolchain::new();
+            let lrelease = match &toolchain.lrelease {
+                Some(lrelease) => lrelease.clone(),
+                None => {
+                    return Err(Errcode::ToolchainError(
+                        ToolchainErrorKind::LReleaseUpdateNotFound,
+                    ));
+                }
+            };
+            let pyproject_config = PyProjectConfig::new("pyproject.toml".into())?;
+            let Some(root) = &pyproject_config.scripts.get(&opt.target) else {
+                return Err(Errcode::InvalidArgument(
+                    InvalidArgumentKind::TargetNotFound,
+                ));
+            };
+            let files = Files::new(root);
+            let mut cache: Cache = load_cache();
+
+            log::info!("Compiling i18n files...");
+            let start = Instant::now();
+            compile_i18n_ts_files(root, &lrelease, &files, &mut cache)?;
+            log::info!("I18n files compiled in {}ms.", start.elapsed().as_millis());
+            let _ = save_cache(&cache).map_err(|_| Errcode::CacheError(CacheErrorKind::SaveFailed));
         }
         _ => {}
     }

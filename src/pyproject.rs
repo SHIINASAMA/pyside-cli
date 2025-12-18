@@ -103,7 +103,7 @@ fn parse_scripts(config: &PyProject) -> Result<HashMap<String, PathBuf>, Errcode
         Some(scripts) => scripts,
         None => {
             return Err(Errcode::PyProjectConfigError(
-                PyProjectErrorKind::MissingField,
+                PyProjectErrorKind::FieldNotFound,
             ));
         }
     };
@@ -116,7 +116,7 @@ fn parse_scripts(config: &PyProject) -> Result<HashMap<String, PathBuf>, Errcode
 
         if package_name.is_empty() {
             return Err(Errcode::PyProjectConfigError(
-                PyProjectErrorKind::MissingField,
+                PyProjectErrorKind::FieldNotFound,
             ));
         }
 

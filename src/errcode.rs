@@ -10,13 +10,25 @@ pub enum InvalidArgumentKind {
 pub enum PyProjectErrorKind {
     ReadFaild,
     ParseFailed,
-    MissingField,
+    FieldNotFound,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum I18nErrorKind {
     CreateFailed,
+    FileNameInvaild,
     LUpdateFailed,
+    LReleaseFailed,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum CacheErrorKind {
+    SaveFailed,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum ToolchainErrorKind {
+    LReleaseUpdateNotFound,
 }
 
 #[derive(Debug)]
@@ -25,6 +37,8 @@ pub enum Errcode {
     InvalidArgument(InvalidArgumentKind),
     PyProjectConfigError(PyProjectErrorKind),
     I18nError(I18nErrorKind),
+    CacheError(CacheErrorKind),
+    ToolchainError(ToolchainErrorKind),
 }
 
 impl fmt::Display for Errcode {
