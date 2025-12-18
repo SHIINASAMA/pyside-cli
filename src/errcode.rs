@@ -1,9 +1,11 @@
 use std::fmt;
 
 #[derive(Debug, Copy, Clone)]
-pub enum InvalidArgumentKind {
+pub enum GeneralErrorKind {
     WorkDirNotFound,
     TargetNotFound,
+    CreateFileFailed,
+    FileNameInvaild,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -11,14 +13,6 @@ pub enum PyProjectErrorKind {
     ReadFaild,
     ParseFailed,
     FieldNotFound,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum I18nErrorKind {
-    CreateFailed,
-    FileNameInvaild,
-    LUpdateFailed,
-    LReleaseFailed,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -30,14 +24,16 @@ pub enum CacheErrorKind {
 pub enum ToolchainErrorKind {
     LReleaseUpdateNotFound,
     UicNotFound,
+    LUpdateFailed,
+    LReleaseFailed,
+    LUicFailed,
 }
 
 #[derive(Debug)]
 #[allow(unused)]
 pub enum Errcode {
-    InvalidArgument(InvalidArgumentKind),
+    GeneralError(GeneralErrorKind),
     PyProjectConfigError(PyProjectErrorKind),
-    I18nError(I18nErrorKind),
     CacheError(CacheErrorKind),
     ToolchainError(ToolchainErrorKind),
 }

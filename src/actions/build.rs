@@ -3,7 +3,7 @@ use std::time::Instant;
 use crate::{
     cache::{Cache, load_cache, save_cache},
     cli::{BuildOptions, BuildStage},
-    errcode::{CacheErrorKind, Errcode, InvalidArgumentKind, ToolchainErrorKind},
+    errcode::{CacheErrorKind, Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
     pyproject::PyProjectConfig,
     qt::{i18n::compile_i18n_ts_files, ui::convert_ui_files},
@@ -22,9 +22,7 @@ pub fn action(opt: &BuildOptions) -> Result<(), Errcode> {
     };
     let pyproject_config = PyProjectConfig::new("pyproject.toml".into())?;
     let Some(root) = &pyproject_config.scripts.get(&opt.target) else {
-        return Err(Errcode::InvalidArgument(
-            InvalidArgumentKind::TargetNotFound,
-        ));
+        return Err(Errcode::GeneralError(GeneralErrorKind::TargetNotFound));
     };
     let files = Files::new(root);
     let mut cache: Cache = load_cache();

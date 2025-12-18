@@ -2,7 +2,7 @@ use std::time::Instant;
 
 use crate::{
     cli::I18nOptions,
-    errcode::{Errcode, InvalidArgumentKind},
+    errcode::{Errcode, GeneralErrorKind},
     files::Files,
     pyproject::PyProjectConfig,
     qt::i18n::generate_i18n_ts_files,
@@ -20,9 +20,7 @@ pub fn action(opt: &I18nOptions) -> Result<(), Errcode> {
     };
     let pyproject_config = PyProjectConfig::new("pyproject.toml".into())?;
     let Some(root) = &pyproject_config.scripts.get(&opt.target) else {
-        return Err(Errcode::InvalidArgument(
-            InvalidArgumentKind::TargetNotFound,
-        ));
+        return Err(Errcode::GeneralError(GeneralErrorKind::TargetNotFound));
     };
 
     let files = Files::new(root);
