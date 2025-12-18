@@ -1,6 +1,6 @@
-use std::time::UNIX_EPOCH;
 use std::{fs, path::Path, process::Command};
 
+use crate::utils::get_file_mtime;
 use crate::{
     cache::Cache,
     errcode::{Errcode, I18nErrorKind},
@@ -53,16 +53,7 @@ pub fn compile_i18n_ts_files(
             return Err(Errcode::I18nError(I18nErrorKind::FileNameInvaild));
         };
 
-        let ts_mtime = match fs::metadata(&ts_file) {
-            Ok(meta) => match meta.modified() {
-                Ok(time) => match time.duration_since(UNIX_EPOCH) {
-                    Ok(dur) => dur.as_secs() as f64 + dur.subsec_nanos() as f64 * 1e-9,
-                    Err(_) => continue,
-                },
-                Err(_) => continue,
-            },
-            Err(_) => continue,
-        };
+        let ts_mtime = get_file_mtime(ts_file);
 
         let key = ts_file
             .strip_prefix(root)

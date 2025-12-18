@@ -1,3 +1,4 @@
+mod actions;
 mod app;
 mod cache;
 mod cli;
@@ -6,6 +7,7 @@ mod files;
 mod pyproject;
 mod qt;
 mod toolchain;
+mod utils;
 
 use crate::{app::run, errcode::exit_with_error};
 
