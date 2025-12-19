@@ -4,7 +4,6 @@ use crate::{
     cache::Cache,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
-    utils::get_file_mtime,
 };
 
 pub fn convert_ui_files(
@@ -52,15 +51,9 @@ pub fn convert_ui_files(
                 .ok_or(Errcode::GeneralError(GeneralErrorKind::FileNameInvaild))?
         ));
 
-        let mtime = get_file_mtime(input_file);
-
         let key = input_file.to_string_lossy().to_string();
-        let pre_ts_time = match cache.ui.get(&key) {
-            Some(t) => t.clone(),
-            None => 0.0,
-        };
 
-        if pre_ts_time >= mtime {
+        if !cache.check_ui_file(&key) {
             log::info!("{} is up to date.", key);
             continue;
         }
@@ -79,8 +72,6 @@ pub fn convert_ui_files(
             input_file.display(),
             output_file.display()
         );
-
-        cache.ui.insert(key, mtime);
     }
 
     Ok(())

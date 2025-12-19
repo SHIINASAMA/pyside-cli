@@ -1,7 +1,6 @@
 use std::{fs, path::Path, process::Command};
 
 use crate::errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind};
-use crate::utils::get_file_mtime;
 use crate::{cache::Cache, files::Files};
 
 pub fn generate_i18n_ts_files(
@@ -57,19 +56,13 @@ pub fn compile_i18n_ts_files(
             return Err(Errcode::GeneralError(GeneralErrorKind::FileNameInvaild));
         };
 
-        let ts_mtime = get_file_mtime(ts_file);
-
         let key = ts_file
             .strip_prefix(root)
             .unwrap()
             .to_string_lossy()
             .to_string();
-        let pre_ts_time = match cache.i18n.get(&key) {
-            Some(t) => t.clone(),
-            None => 0.0,
-        };
 
-        if pre_ts_time >= ts_mtime {
+        if !cache.check_i18n_file(&key) {
             log::info!("{} is up to date.", key);
             continue;
         }
@@ -84,8 +77,6 @@ pub fn compile_i18n_ts_files(
         cmd.wait()
             .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::LReleaseFailed))?;
         log::info!("Compiled .qm file: {}.", qm_file.display());
-
-        cache.i18n.insert(key, ts_mtime);
     }
 
     Ok(())
