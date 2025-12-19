@@ -57,9 +57,15 @@ pub fn action(opt: &BuildOptions) -> Result<(), Errcode> {
                 return Err(Errcode::ToolchainError(ToolchainErrorKind::RccNotFound));
             }
         };
+        let git = match &toolchain.git {
+            Some(git) => git.clone(),
+            None => {
+                return Err(Errcode::ToolchainError(ToolchainErrorKind::GitNotFound));
+            }
+        };
         log::info!("Compiling assets...");
         let start = Instant::now();
-        compile_resources(root, &rcc, &files, &mut cache)?;
+        compile_resources(root, &rcc, &git, &files, &mut cache)?;
         log::info!("Assets compiled in {}ms.", start.elapsed().as_millis());
     }
 

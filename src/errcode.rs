@@ -25,10 +25,12 @@ pub enum ToolchainErrorKind {
     LReleaseUpdateNotFound,
     UicNotFound,
     RccNotFound,
+    GitNotFound,
     LUpdateFailed,
     LReleaseFailed,
     UicFailed,
     RccFailed,
+    GitFailed,
 }
 
 #[derive(Debug)]
