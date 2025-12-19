@@ -24,9 +24,11 @@ pub enum CacheErrorKind {
 pub enum ToolchainErrorKind {
     LReleaseUpdateNotFound,
     UicNotFound,
+    RccNotFound,
     LUpdateFailed,
     LReleaseFailed,
-    LUicFailed,
+    UicFailed,
+    RccFailed,
 }
 
 #[derive(Debug)]

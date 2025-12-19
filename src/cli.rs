@@ -7,7 +7,9 @@ use crate::errcode::Errcode;
 #[command(
     name = "pyside-cli",
     about = "Test and build your app",
-    arg_required_else_help = true
+    arg_required_else_help = true,
+    version = env!("CARGO_PKG_VERSION"),
+    long_version = env!("CARGO_PKG_VERSION"),
 )]
 pub struct Args {
     #[command(subcommand)]

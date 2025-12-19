@@ -17,7 +17,7 @@ pub fn convert_ui_files(
     let res_dir = root.join("resources");
 
     if !ui_dir.exists() || !ui_dir.is_dir() {
-        log::info!("UI directory not found, skipping.");
+        log::info!("No UI files found, skipping.");
         return Ok(());
     }
 
@@ -70,9 +70,9 @@ pub fn convert_ui_files(
             .arg("-o")
             .arg(&output_file)
             .spawn()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::LUicFailed))?;
+            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::UicFailed))?;
         cmd.wait()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::LUicFailed))?;
+            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::UicFailed))?;
 
         log::info!(
             "Converted {} to {}.",

@@ -10,6 +10,11 @@ pub fn generate_i18n_ts_files(
     files: &Files,
     languages: Vec<String>,
 ) -> Result<(), Errcode> {
+    if languages.is_empty() {
+        log::info!("No languages specified, skipping.");
+        return Ok(());
+    }
+
     let i18n_dir = root.join("i18n");
     fs::create_dir_all(&i18n_dir)
         .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
