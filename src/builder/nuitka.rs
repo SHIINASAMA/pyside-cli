@@ -57,6 +57,19 @@ impl NuitkaBuilder {
 
 impl Builder for NuitkaBuilder {
     fn pre_build(&self) -> Result<(), Errcode> {
+        let build_dir = Path::new("build");
+        let new_target = build_dir.join(&self.target_name);
+        if new_target.exists() {
+            if new_target.is_dir() {
+                log::debug!("Removing old target directory.");
+                fs::remove_dir_all(&new_target)
+                    .map_err(|_| Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed))?;
+            } else {
+                log::debug!("Removing old target file.");
+                fs::remove_file(&new_target)
+                    .map_err(|_| Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed))?;
+            }
+        }
         Ok(())
     }
 
@@ -72,20 +85,15 @@ impl Builder for NuitkaBuilder {
 
     fn post_build(&self) -> Result<(), Errcode> {
         let build_dir = Path::new("build");
-        let old_target_dir = build_dir.join(format!("{}.dist", &self.target_dir));
-        let new_target_dir = build_dir.join(&self.target_name);
+        let old_target = build_dir.join(format!("{}.dist", &self.target_dir));
+        let new_target = build_dir.join(&self.target_name);
         if !self.onefile {
-            if new_target_dir.exists() {
-                log::debug!("Removing old target directory.");
-                fs::remove_dir_all(&new_target_dir)
-                    .map_err(|_| Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed))?;
-            }
             log::debug!(
                 "Renaming {} to {}.",
-                old_target_dir.display(),
-                new_target_dir.display()
+                old_target.display(),
+                new_target.display()
             );
-            fs::rename(old_target_dir, new_target_dir)
+            fs::rename(old_target, new_target)
                 .map_err(|_| Errcode::GeneralError(GeneralErrorKind::MoveFileFailed))?;
         }
         Ok(())
