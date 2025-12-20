@@ -1,9 +1,11 @@
 use crate::actions;
-use crate::cli::{Command, parse_cli};
+use crate::cli::{Command, init_logger, parse_cli};
 use crate::errcode::{Errcode, GeneralErrorKind};
 
 pub fn run() -> Result<(), Errcode> {
     let args = parse_cli()?;
+
+    init_logger(args.debug.clone());
 
     if let Some(path) = &args.work_dir {
         log::info!("Working directory set to {} .", path);
@@ -17,7 +19,6 @@ pub fn run() -> Result<(), Errcode> {
         Command::Build(opt) => actions::build::action(opt)?,
         Command::Test(_opt) => {}
         Command::Create { name } => {}
-        _ => {}
     }
 
     Ok(())

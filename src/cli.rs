@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use log::LevelFilter;
+// use std::io::Write;
 
 use crate::errcode::Errcode;
 
@@ -111,14 +112,19 @@ pub struct TestOptions {
     pub backend_args: Vec<String>,
 }
 
-pub fn parse_cli() -> Result<Args, Errcode> {
-    let cli = Args::parse();
+pub fn init_logger(debug: bool) {
     let mut logger_mode = LevelFilter::Info;
-    if cli.debug {
+    if debug {
         logger_mode = LevelFilter::Debug;
     }
+
     env_logger::Builder::from_default_env()
         .filter(None, logger_mode)
+        // .format(move |buf, record| writeln!(buf, "{:<5} {}", record.level(), record.args()))
         .init();
+}
+
+pub fn parse_cli() -> Result<Args, Errcode> {
+    let cli = Args::parse();
     Ok(cli)
 }

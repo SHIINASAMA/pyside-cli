@@ -29,13 +29,14 @@ pub enum ToolchainErrorKind {
     RccNotFound,
     GitNotFound,
     NuitkaNotFound,
-    // PyinstallerNotFound,
+    PyInstallerNotFound,
     LUpdateFailed,
     LReleaseFailed,
     UicFailed,
     RccFailed,
     // GitFailed,
     NuitkaFailed,
+    PyInstallerFailed,
 }
 
 #[derive(Debug)]

@@ -100,20 +100,29 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
                     &opt.target,
                     target_path.to_string_lossy().to_string().as_str(),
                     &nuitka_exe,
-                    &opt.onefile,
+                    opt.onefile,
                     extra_opts,
                 ))
             }
             Backend::Pyinstaller => {
-                // let pyinstaller_exe = match &toolchain.pyinstaller {
-                //     Some(pyinstaller) => pyinstaller.clone(),
-                //     None => {
-                //         return Err(Errcode::ToolchainError(
-                //             ToolchainErrorKind::PyinstallerNotFound,
-                //         ));
-                //     }
-                // };
-                Box::new(PyInstallerBuilder::new())
+                let pyinstaller_exe = match &toolchain.pyinstaller {
+                    Some(pyinstaller) => pyinstaller.clone(),
+                    None => {
+                        return Err(Errcode::ToolchainError(
+                            ToolchainErrorKind::PyInstallerNotFound,
+                        ));
+                    }
+                };
+                let mut extra_opts = opt.backend_args;
+                extra_opts.extend(pyproject_config.extra_pyinstaller_options_list);
+
+                Box::new(PyInstallerBuilder::new(
+                    &opt.target,
+                    target_path.to_string_lossy().to_string().as_str(),
+                    &pyinstaller_exe,
+                    opt.onefile,
+                    extra_opts,
+                ))
             }
         };
 

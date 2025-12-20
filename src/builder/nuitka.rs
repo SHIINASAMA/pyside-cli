@@ -13,7 +13,7 @@ use crate::{
 pub struct NuitkaBuilder {
     target_name: String,
     target_dir: String,
-    nuitka_exe: PathBuf,
+    exec: PathBuf,
     options: Vec<String>,
 }
 
@@ -22,7 +22,7 @@ impl NuitkaBuilder {
         target_name: &str,
         target_dir: &str,
         nuitka_exe: &Path,
-        onefile: &bool,
+        onefile: bool,
         extra_options: Vec<String>,
     ) -> Self {
         let n = thread::available_parallelism()
@@ -32,7 +32,7 @@ impl NuitkaBuilder {
             "--output-dir=build".into(),
             "--output-filename=App".into(),
             target_dir.to_string(),
-            if *onefile {
+            if onefile {
                 "--onefile".into()
             } else {
                 "--standalone".into()
@@ -42,12 +42,12 @@ impl NuitkaBuilder {
 
         options.extend(extra_options);
 
-        log::debug!("Full build options: {:?}", options);
+        log::debug!("Build options: {:?}", options);
 
         NuitkaBuilder {
             target_name: target_name.to_string(),
             target_dir: target_dir.to_string(),
-            nuitka_exe: nuitka_exe.to_path_buf(),
+            exec: nuitka_exe.to_path_buf(),
             options: options,
         }
     }
@@ -59,7 +59,7 @@ impl Builder for NuitkaBuilder {
     }
 
     fn build(&self) -> Result<(), Errcode> {
-        let mut cmd = Command::new(&self.nuitka_exe)
+        let mut cmd = Command::new(&self.exec)
             .args(&self.options)
             .spawn()
             .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::NuitkaFailed))?;

@@ -51,6 +51,11 @@ impl Files {
             }
         }
 
+        log::debug!("Source list: {:?}", source_list);
+        log::debug!("UI list: {:?}", ui_list);
+        log::debug!("Asset list: {:?}", asset_list);
+        log::debug!("I18n list: {:?}", i18n_list);
+
         Self {
             source_list: source_list,
             ui_list: ui_list,
