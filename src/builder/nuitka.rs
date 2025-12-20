@@ -14,6 +14,7 @@ pub struct NuitkaBuilder {
     target_name: String,
     target_dir: String,
     exec: PathBuf,
+    onefile: bool,
     options: Vec<String>,
 }
 
@@ -48,6 +49,7 @@ impl NuitkaBuilder {
             target_name: target_name.to_string(),
             target_dir: target_dir.to_string(),
             exec: nuitka_exe.to_path_buf(),
+            onefile: onefile,
             options: options,
         }
     }
@@ -70,14 +72,20 @@ impl Builder for NuitkaBuilder {
 
     fn post_build(&self) -> Result<(), Errcode> {
         let build_dir = Path::new("build");
-        let target_dir = build_dir.join(&self.target_name);
-        if target_dir.is_dir() {
-            if target_dir.exists() {
-                fs::remove_dir_all(&target_dir)
+        let old_target_dir = build_dir.join(format!("{}.dist", &self.target_dir));
+        let new_target_dir = build_dir.join(&self.target_name);
+        if !self.onefile {
+            if new_target_dir.exists() {
+                log::debug!("Removing old target directory.");
+                fs::remove_dir_all(&new_target_dir)
                     .map_err(|_| Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed))?;
             }
-            let raw_target_dir = build_dir.join(format!("{}.dist", &self.target_dir));
-            fs::rename(raw_target_dir, &target_dir)
+            log::debug!(
+                "Renaming {} to {}.",
+                old_target_dir.display(),
+                new_target_dir.display()
+            );
+            fs::rename(old_target_dir, new_target_dir)
                 .map_err(|_| Errcode::GeneralError(GeneralErrorKind::MoveFileFailed))?;
         }
         Ok(())
