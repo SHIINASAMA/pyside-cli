@@ -30,6 +30,7 @@ pub enum ToolchainErrorKind {
     GitNotFound,
     NuitkaNotFound,
     PyInstallerNotFound,
+    PyTestNotFound,
     LUpdateFailed,
     LReleaseFailed,
     UicFailed,
@@ -37,6 +38,7 @@ pub enum ToolchainErrorKind {
     // GitFailed,
     NuitkaFailed,
     PyInstallerFailed,
+    PyTestFailed,
 }
 
 #[derive(Debug)]

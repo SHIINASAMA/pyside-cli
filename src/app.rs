@@ -17,7 +17,7 @@ pub fn run() -> Result<(), Errcode> {
         Command::Targets => actions::targets::action()?,
         Command::I18n(opt) => actions::i18n::action(opt)?,
         Command::Build(opt) => actions::build::action(opt)?,
-        Command::Test(_opt) => {}
+        Command::Test(opt) => actions::test::action(opt)?,
         Command::Create { name } => {}
     }
 
