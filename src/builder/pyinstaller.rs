@@ -6,6 +6,7 @@ use std::{
 use crate::{
     builder::builder::Builder,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
+    run_and_wait,
 };
 
 pub struct PyInstallerBuilder {
@@ -66,12 +67,10 @@ impl Builder for PyInstallerBuilder {
     }
 
     fn build(&self) -> Result<(), Errcode> {
-        let mut cmd = Command::new(&self.exec)
-            .args(&self.options)
-            .spawn()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::PyInstallerFailed))?;
-        cmd.wait()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::PyInstallerFailed))?;
+        run_and_wait!(
+            Command::new(&self.exec).args(&self.options),
+            Errcode::ToolchainError(ToolchainErrorKind::PyInstallerFailed)
+        )?;
         Ok(())
     }
 

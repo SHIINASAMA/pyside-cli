@@ -8,6 +8,7 @@ use std::{
 use crate::{
     builder::builder::Builder,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
+    run_and_wait,
 };
 
 pub struct NuitkaBuilder {
@@ -74,12 +75,10 @@ impl Builder for NuitkaBuilder {
     }
 
     fn build(&self) -> Result<(), Errcode> {
-        let mut cmd = Command::new(&self.exec)
-            .args(&self.options)
-            .spawn()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::NuitkaFailed))?;
-        cmd.wait()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::NuitkaFailed))?;
+        run_and_wait!(
+            Command::new(&self.exec).args(&self.options),
+            Errcode::ToolchainError(ToolchainErrorKind::NuitkaFailed)
+        )?;
         Ok(())
     }
 

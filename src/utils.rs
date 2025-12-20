@@ -33,3 +33,11 @@ pub fn format_duration(d: Duration) -> String {
         format!("{}ms", ms)
     }
 }
+
+#[macro_export]
+macro_rules! run_and_wait {
+    ($cmd:expr, $e:expr) => {{
+        let mut child = $cmd.spawn().map_err(|_| $e)?;
+        child.wait().map_err(|_| $e)
+    }};
+}

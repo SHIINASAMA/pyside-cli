@@ -1,6 +1,7 @@
 use std::{fs, path::Path, process::Command};
 
 use crate::errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind};
+use crate::run_and_wait;
 use crate::{cache::Cache, files::Files};
 
 pub fn generate_i18n_ts_files(
@@ -21,20 +22,20 @@ pub fn generate_i18n_ts_files(
     for lang in languages {
         let ts_file = i18n_dir.join(format!("{}.ts", lang));
         log::info!("Generating {} ...", ts_file.display());
-        let mut cmd = Command::new(lupdate)
-            .arg("-silent")
-            .arg("-locations")
-            .arg("absolute")
-            .arg("-extensions")
-            .arg("-ui")
-            .args(&files.source_list)
-            .args(&files.ui_list)
-            .arg("-ts")
-            .arg(ts_file.clone())
-            .spawn()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::LUpdateFailed))?;
-        cmd.wait()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::LUpdateFailed))?;
+        run_and_wait!(
+            Command::new(lupdate)
+                .arg("-silent")
+                .arg("-locations")
+                .arg("absolute")
+                .arg("-extensions")
+                .arg("-ui")
+                .args(&files.source_list)
+                .args(&files.ui_list)
+                .arg("-ts")
+                .arg(ts_file.clone()),
+            Errcode::ToolchainError(ToolchainErrorKind::LUpdateFailed)
+        )?;
+
         log::info!("Generated translation file: {}", ts_file.display())
     }
 
@@ -68,14 +69,15 @@ pub fn compile_i18n_ts_files(
         }
         let qm_file = qm_root.join(format!("{}.qm", qm_filename.to_string_lossy()));
         log::info!("Compiling {} to {}.", ts_file.display(), qm_file.display());
-        let mut cmd = Command::new(&lrelease)
-            .arg(ts_file)
-            .arg("-qm")
-            .arg(&qm_file)
-            .spawn()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::LReleaseFailed))?;
-        cmd.wait()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::LReleaseFailed))?;
+
+        run_and_wait!(
+            Command::new(&lrelease)
+                .arg(ts_file)
+                .arg("-qm")
+                .arg(&qm_file),
+            Errcode::ToolchainError(ToolchainErrorKind::LReleaseFailed)
+        )?;
+
         log::info!("Compiled .qm file: {}.", qm_file.display());
     }
 

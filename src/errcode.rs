@@ -6,6 +6,7 @@ pub enum GeneralErrorKind {
     TargetNotFound,
     CreateFileFailed,
     RemoveFileFailed,
+    ReadFileFailed,
     MoveFileFailed,
     FileNameInvaild,
 }
@@ -35,7 +36,7 @@ pub enum ToolchainErrorKind {
     LReleaseFailed,
     UicFailed,
     RccFailed,
-    // GitFailed,
+    GitFailed,
     NuitkaFailed,
     PyInstallerFailed,
     PyTestFailed,

@@ -4,6 +4,7 @@ use crate::{
     cache::Cache,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
+    run_and_wait,
 };
 
 pub fn convert_ui_files(
@@ -58,14 +59,13 @@ pub fn convert_ui_files(
             continue;
         }
 
-        let mut cmd = Command::new(uic)
-            .arg(input_file)
-            .arg("-o")
-            .arg(&output_file)
-            .spawn()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::UicFailed))?;
-        cmd.wait()
-            .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::UicFailed))?;
+        run_and_wait!(
+            Command::new(uic)
+                .arg(input_file)
+                .arg("-o")
+                .arg(&output_file),
+            Errcode::ToolchainError(ToolchainErrorKind::UicFailed)
+        )?;
 
         log::info!(
             "Converted {} to {}.",

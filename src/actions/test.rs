@@ -3,6 +3,7 @@ use std::process::Command;
 use crate::{
     cli::TestOptions,
     errcode::{Errcode, ToolchainErrorKind},
+    run_and_wait,
     toolchain::Toolchain,
 };
 
@@ -15,12 +16,10 @@ pub fn action(opt: TestOptions) -> Result<(), Errcode> {
         }
     };
 
-    let mut cmd = Command::new(pytest)
-        .args(opt.backend_args)
-        .spawn()
-        .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::PyTestFailed))?;
-    cmd.wait()
-        .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::PyTestFailed))?;
+    run_and_wait!(
+        Command::new(pytest).args(opt.backend_args),
+        Errcode::ToolchainError(ToolchainErrorKind::PyTestFailed)
+    )?;
 
     Ok(())
 }

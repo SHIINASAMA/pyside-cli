@@ -11,6 +11,7 @@ use crate::{
     cache::Cache,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
+    run_and_wait,
 };
 
 macro_rules! my_write {
@@ -143,14 +144,13 @@ pub fn compile_resources(
             .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
     }
 
-    let mut cmd = Command::new(&rcc)
-        .arg(root.join("assets").join("assets.qrc"))
-        .arg("-o")
-        .arg(py_res_file)
-        .spawn()
-        .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::RccFailed))?;
-    cmd.wait()
-        .map_err(|_| Errcode::ToolchainError(ToolchainErrorKind::RccFailed))?;
+    run_and_wait!(
+        Command::new(&rcc)
+            .arg(root.join("assets").join("assets.qrc"))
+            .arg("-o")
+            .arg(py_res_file),
+        Errcode::ToolchainError(ToolchainErrorKind::RccFailed)
+    )?;
 
     touch_version_py(&res_dir, git)?;
     touch_init_py(&res_dir)?;
