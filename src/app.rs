@@ -11,7 +11,7 @@ pub fn run() -> Result<(), Errcode> {
             .map_err(|_| Errcode::GeneralError(GeneralErrorKind::WorkDirNotFound));
     };
 
-    match &args.command {
+    match args.command {
         Command::Targets => actions::targets::action()?,
         Command::I18n(opt) => actions::i18n::action(opt)?,
         Command::Build(opt) => actions::build::action(opt)?,

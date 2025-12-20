@@ -5,6 +5,8 @@ pub enum GeneralErrorKind {
     WorkDirNotFound,
     TargetNotFound,
     CreateFileFailed,
+    RemoveFileFailed,
+    MoveFileFailed,
     FileNameInvaild,
 }
 
@@ -26,11 +28,14 @@ pub enum ToolchainErrorKind {
     UicNotFound,
     RccNotFound,
     GitNotFound,
+    NuitkaNotFound,
+    // PyinstallerNotFound,
     LUpdateFailed,
     LReleaseFailed,
     UicFailed,
     RccFailed,
-    GitFailed,
+    // GitFailed,
+    NuitkaFailed,
 }
 
 #[derive(Debug)]

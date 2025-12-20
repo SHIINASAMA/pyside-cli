@@ -7,9 +7,10 @@ use crate::{
     pyproject::PyProjectConfig,
     qt::i18n::generate_i18n_ts_files,
     toolchain::Toolchain,
+    utils::format_duration,
 };
 
-pub fn action(opt: &I18nOptions) -> Result<(), Errcode> {
+pub fn action(opt: I18nOptions) -> Result<(), Errcode> {
     let toolchain = Toolchain::new();
     let lupdate = match &toolchain.lupdate {
         Some(lupdate) => lupdate.clone(),
@@ -28,7 +29,10 @@ pub fn action(opt: &I18nOptions) -> Result<(), Errcode> {
     log::info!("Generating i18n files...");
     let start = Instant::now();
     generate_i18n_ts_files(root, &lupdate, &files, pyproject_config.languages)?;
-    log::info!("I18n files generated in {}ms.", start.elapsed().as_millis());
+    log::info!(
+        "I18n files generated in {}.",
+        format_duration(start.elapsed())
+    );
 
     Ok(())
 }

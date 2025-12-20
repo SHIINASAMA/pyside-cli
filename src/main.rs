@@ -1,5 +1,6 @@
 mod actions;
 mod app;
+mod builder;
 mod cache;
 mod cli;
 mod errcode;

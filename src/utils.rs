@@ -1,4 +1,8 @@
-use std::{fs, path::Path, time::UNIX_EPOCH};
+use std::{
+    fs,
+    path::Path,
+    time::{Duration, UNIX_EPOCH},
+};
 
 pub fn get_file_mtime(path: &Path) -> f64 {
     match fs::metadata(&path) {
@@ -10,5 +14,22 @@ pub fn get_file_mtime(path: &Path) -> f64 {
             Err(_) => 0.0,
         },
         Err(_) => 0.0,
+    }
+}
+
+pub fn format_duration(d: Duration) -> String {
+    let ms = d.as_millis();
+    let secs = d.as_secs();
+    let mins = secs / 60;
+    let hours = mins / 60;
+
+    if hours > 0 {
+        format!("{}h{}m", hours, mins % 60)
+    } else if mins > 0 {
+        format!("{}m{}s", mins, secs % 60)
+    } else if secs > 0 {
+        format!("{}s", secs)
+    } else {
+        format!("{}ms", ms)
     }
 }
