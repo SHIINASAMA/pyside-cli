@@ -26,7 +26,10 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
     };
 
     // I18N
-    if matches!(opt.stage, BuildStage::I18n | BuildStage::All) {
+    if matches!(
+        opt.stage,
+        BuildStage::I18n | BuildStage::Rc | BuildStage::All
+    ) {
         let lrelease = match &toolchain.lrelease {
             Some(lrelease) => lrelease.clone(),
             None => {
@@ -45,7 +48,7 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
     }
 
     // UI
-    if matches!(opt.stage, BuildStage::Ui | BuildStage::All) {
+    if matches!(opt.stage, BuildStage::Ui | BuildStage::Rc | BuildStage::All) {
         let uic = match &toolchain.uic {
             Some(uic) => uic.clone(),
             None => {
@@ -62,7 +65,10 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
     }
 
     // Assets
-    if matches!(opt.stage, BuildStage::Assets | BuildStage::All) {
+    if matches!(
+        opt.stage,
+        BuildStage::Assets | BuildStage::Rc | BuildStage::All
+    ) {
         let rcc = match &toolchain.rcc {
             Some(rcc) => rcc.clone(),
             None => {

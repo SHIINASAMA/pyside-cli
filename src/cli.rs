@@ -86,6 +86,8 @@ pub enum BuildStage {
     Ui,
     /// Only convert assets files into resource.py.
     Assets,
+    /// Including I18n, UI, Assets stages.
+    Rc,
     /// Only build the app.
     Build,
     /// Build all stages.
@@ -94,7 +96,11 @@ pub enum BuildStage {
 
 #[derive(ValueEnum, Debug, Clone)]
 pub enum Backend {
+    /// Use Nuitka as the build backend.
+    /// Ref: https://nuitka.net/
     Nuitka,
+    /// Use PyInstaller as the build backend.
+    /// Ref: https://pyinstaller.org/
     Pyinstaller,
 }
 
