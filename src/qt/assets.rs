@@ -24,7 +24,7 @@ macro_rules! my_write {
 fn generate_assets_qrc(root: &Path, files: &Files) -> Result<(), Errcode> {
     let res_dir = root.join("resources");
     let assets_dir = root.join("assets");
-    let qrc_file = assets_dir.join("assets.qrc");
+    let qrc_file = res_dir.join("assets.qrc");
 
     fs::create_dir_all(&res_dir)
         .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
@@ -36,7 +36,7 @@ fn generate_assets_qrc(root: &Path, files: &Files) -> Result<(), Errcode> {
         f,
         "<!DOCTYPE RCC>
 <RCC version=\"1.0\">
-  <qresource>"
+<qresource>\n"
     )?;
 
     for asset in &files.asset_list {
@@ -52,7 +52,7 @@ fn generate_assets_qrc(root: &Path, files: &Files) -> Result<(), Errcode> {
             .join(&alias)
             .to_string_lossy()
             .replace('\\', "/");
-        my_write!(f, "  <file alias=\"{}\">{}</file>", alias, rel_path)?;
+        my_write!(f, "  <file alias=\"{}\">{}</file>\n", alias, rel_path)?;
     }
 
     my_write!(
@@ -146,7 +146,7 @@ pub fn compile_resources(
 
     run_and_wait!(
         Command::new(&rcc)
-            .arg(root.join("assets").join("assets.qrc"))
+            .arg(root.join("resources").join("assets.qrc"))
             .arg("-o")
             .arg(py_res_file),
         Errcode::ToolchainError(ToolchainErrorKind::RccFailed)
