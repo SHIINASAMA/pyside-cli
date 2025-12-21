@@ -19,6 +19,7 @@ pub fn run() -> Result<(), Errcode> {
         Command::Build(opt) => actions::build::action(opt)?,
         Command::Test(opt) => actions::test::action(opt)?,
         Command::Create { name } => actions::create::action(name)?,
+        Command::Completions { shell } => actions::completions::action(shell),
     }
 
     Ok(())

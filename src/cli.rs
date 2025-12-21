@@ -1,4 +1,10 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{
+    Parser, Subcommand, ValueEnum,
+    builder::{
+        Styles,
+        styling::{AnsiColor, Effects},
+    },
+};
 use log::LevelFilter;
 // use std::io::Write;
 
@@ -11,6 +17,13 @@ use crate::errcode::Errcode;
     arg_required_else_help = true,
     version = env!("CARGO_PKG_VERSION"),
     long_version = env!("CARGO_PKG_VERSION"),
+    color = clap::ColorChoice::Always,
+    styles = Styles::styled()
+            .header(AnsiColor::BrightBlue.on_default().effects(Effects::BOLD))
+            .usage(AnsiColor::BrightGreen.on_default().effects(Effects::BOLD))
+            .literal(AnsiColor::BrightCyan.on_default())
+            .placeholder(AnsiColor::BrightYellow.on_default())
+            .error(AnsiColor::BrightRed.on_default().effects(Effects::BOLD))
 )]
 pub struct Args {
     #[command(subcommand)]
@@ -45,6 +58,13 @@ pub enum Command {
 
     /// Create your project with name
     Create { name: String },
+
+    /// Generate shell completions
+    #[command(hide = true)]
+    Completions {
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
 }
 
 #[derive(Parser, Debug, Clone)]
