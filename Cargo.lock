@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "pyside-cli"
-version = "1.0.0-beta.2"
+version = "1.0.0-beta.3"
 dependencies = [
  "clap",
  "comfy-table",
