@@ -1,5 +1,7 @@
 [project]
 name = "pyside-cli"
+# Will be replaced by the version number in the Cargo.toml file.
+# DO NOT EDIT THIS LINE.
 version = "0.3.5"
 description = "A command-line tool for quickly creating and managing PySide6 projects."
 readme = "README.md"
@@ -25,5 +27,5 @@ dev = [
 ]
 
 [build-system]
-requires = [ "maturin" ]
+requires = ["maturin>=1.5"]
 build-backend = "maturin"
