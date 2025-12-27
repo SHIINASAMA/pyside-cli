@@ -36,10 +36,6 @@ pub struct Args {
     /// Change working directory
     #[arg(long, value_name = "DIR")]
     pub work_dir: Option<String>,
-
-    /// Use low performance mode
-    #[arg(long)]
-    pub low_perf: bool,
 }
 
 #[derive(Subcommand, Debug, Clone)]
