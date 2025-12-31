@@ -15,9 +15,12 @@ use crate::{
 };
 
 macro_rules! my_write {
-    ($file:expr, $($arg:tt)*) => {
+    ($filename:expr, $file:expr, $($arg:tt)*) => {
         write!($file, $($arg)*)
-            .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))
+            .map_err(|e| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+                path: $filename.clone(),
+                source: e,
+            }))
     };
 }
 
@@ -26,13 +29,22 @@ fn generate_assets_qrc(root: &Path, files: &Files) -> Result<(), Errcode> {
     let assets_dir = root.join("assets");
     let qrc_file = res_dir.join("assets.qrc");
 
-    fs::create_dir_all(&res_dir)
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+    fs::create_dir_all(&res_dir).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+            path: res_dir,
+            source: e,
+        })
+    })?;
 
-    let mut f = File::create(qrc_file)
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+    let mut f = File::create(&qrc_file).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+            path: qrc_file.clone(),
+            source: e,
+        })
+    })?;
 
     my_write!(
+        qrc_file,
         f,
         "<!DOCTYPE RCC>
 <RCC version=\"1.0\">
@@ -52,10 +64,17 @@ fn generate_assets_qrc(root: &Path, files: &Files) -> Result<(), Errcode> {
             .join(&alias)
             .to_string_lossy()
             .replace('\\', "/");
-        my_write!(f, "  <file alias=\"{}\">{}</file>\n", alias, rel_path)?;
+        my_write!(
+            qrc_file,
+            f,
+            "  <file alias=\"{}\">{}</file>\n",
+            alias,
+            rel_path
+        )?;
     }
 
     my_write!(
+        qrc_file,
         f,
         "</qresource>
 </RCC>"
@@ -67,8 +86,12 @@ fn generate_assets_qrc(root: &Path, files: &Files) -> Result<(), Errcode> {
 fn touch_init_py(resources_dir: &Path) -> Result<(), Errcode> {
     let init_file = resources_dir.join("__init__.py");
     if !init_file.exists() {
-        fs::File::create(&init_file)
-            .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+        fs::File::create(&init_file).map_err(|e| {
+            Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+                path: init_file.clone(),
+                source: e,
+            })
+        })?;
     }
 
     // Walk all subdirectories
@@ -79,8 +102,12 @@ fn touch_init_py(resources_dir: &Path) -> Result<(), Errcode> {
         if entry.file_type().is_dir() {
             let init_file = entry.path().join("__init__.py");
             if !init_file.exists() {
-                fs::File::create(init_file)
-                    .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+                fs::File::create(&init_file).map_err(|e| {
+                    Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+                        path: init_file.clone(),
+                        source: e,
+                    })
+                })?;
             }
         }
     }
@@ -91,9 +118,13 @@ fn touch_version_py(resources_dir: &Path, git: &Path) -> Result<(), Errcode> {
     let version_py = resources_dir.join("version.py");
     let version = get_last_tag(git, "0.0.0.0");
 
-    let mut f = File::create(version_py)
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
-    my_write!(f, "__version__ = '{}'\n", version)?;
+    let mut f = File::create(&version_py).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+            path: version_py.clone(),
+            source: e,
+        })
+    })?;
+    my_write!(version_py, f, "__version__ = '{}'\n", version)?;
 
     Ok(())
 }
@@ -140,8 +171,12 @@ pub fn compile_resources(
     let res_dir = root.join("resources");
     let py_res_file = res_dir.join("resource.py");
     if !res_dir.exists() {
-        fs::create_dir_all(&res_dir)
-            .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+        fs::create_dir_all(&res_dir).map_err(|e| {
+            Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+                path: res_dir.clone(),
+                source: e,
+            })
+        })?;
     }
 
     run_and_wait!(

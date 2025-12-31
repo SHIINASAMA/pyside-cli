@@ -16,7 +16,9 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
     let toolchain = Toolchain::new();
     let pyproject_config = PyProjectConfig::new("pyproject.toml".into())?;
     let Some(target_path) = &pyproject_config.scripts.get(&opt.target) else {
-        return Err(Errcode::GeneralError(GeneralErrorKind::TargetNotFound));
+        return Err(Errcode::GeneralError(GeneralErrorKind::TargetNotFound {
+            target: opt.target,
+        }));
     };
     let files = Files::new(target_path);
     let mut cache: Cache = if opt.no_cache {

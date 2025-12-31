@@ -16,8 +16,12 @@ pub fn generate_i18n_ts_files(
     }
 
     let i18n_dir = root.join("i18n");
-    fs::create_dir_all(&i18n_dir)
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+    fs::create_dir_all(&i18n_dir).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+            path: i18n_dir.clone(),
+            source: e,
+        })
+    })?;
 
     for lang in languages {
         let ts_file = i18n_dir.join(format!("{}.ts", lang));
@@ -49,12 +53,18 @@ pub fn compile_i18n_ts_files(
     cache: &mut Cache,
 ) -> Result<(), Errcode> {
     let qm_root = root.join("assets").join("i18n");
-    fs::create_dir_all(&qm_root)
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+    fs::create_dir_all(&qm_root).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+            path: qm_root.clone(),
+            source: e,
+        })
+    })?;
 
     for ts_file in &files.i18n_list {
         let Some(qm_filename) = ts_file.file_stem() else {
-            return Err(Errcode::GeneralError(GeneralErrorKind::FileNameInvaild));
+            return Err(Errcode::GeneralError(GeneralErrorKind::FileNameInvalid {
+                name: ts_file.clone(),
+            }));
         };
 
         let key = ts_file

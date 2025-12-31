@@ -21,7 +21,9 @@ pub fn action(opt: I18nOptions) -> Result<(), Errcode> {
     };
     let pyproject_config = PyProjectConfig::new("pyproject.toml".into())?;
     let Some(root) = &pyproject_config.scripts.get(&opt.target) else {
-        return Err(Errcode::GeneralError(GeneralErrorKind::TargetNotFound));
+        return Err(Errcode::GeneralError(GeneralErrorKind::TargetNotFound {
+            target: opt.target,
+        }));
     };
 
     let files = Files::new(root);

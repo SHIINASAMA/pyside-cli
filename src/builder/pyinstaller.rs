@@ -79,8 +79,12 @@ impl Builder for PyInstallerBuilder {
         let target_spec_file = build_dir.join(format!("{}.spec", self.target_name));
         if target_spec_file.exists() {
             log::debug!("Removing old target spec file.");
-            std::fs::remove_file(target_spec_file)
-                .map_err(|_| Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed))?;
+            std::fs::remove_file(&target_spec_file).map_err(|e| {
+                Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed {
+                    path: target_spec_file,
+                    source: e,
+                })
+            })?;
         }
         Ok(())
     }

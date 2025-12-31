@@ -63,12 +63,20 @@ impl Builder for NuitkaBuilder {
         if new_target.exists() {
             if new_target.is_dir() {
                 log::debug!("Removing old target directory.");
-                fs::remove_dir_all(&new_target)
-                    .map_err(|_| Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed))?;
+                fs::remove_dir_all(&new_target).map_err(|e| {
+                    Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed {
+                        path: new_target.clone(),
+                        source: e,
+                    })
+                })?;
             } else {
                 log::debug!("Removing old target file.");
-                fs::remove_file(&new_target)
-                    .map_err(|_| Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed))?;
+                fs::remove_file(&new_target).map_err(|e| {
+                    Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed {
+                        path: new_target.clone(),
+                        source: e,
+                    })
+                })?;
             }
         }
         Ok(())
@@ -92,8 +100,13 @@ impl Builder for NuitkaBuilder {
                 old_target.display(),
                 new_target.display()
             );
-            fs::rename(old_target, new_target)
-                .map_err(|_| Errcode::GeneralError(GeneralErrorKind::MoveFileFailed))?;
+            fs::rename(&old_target, &new_target).map_err(|e| {
+                Errcode::GeneralError(GeneralErrorKind::MoveFileFailed {
+                    from: old_target,
+                    to: new_target,
+                    source: e,
+                })
+            })?;
         }
         Ok(())
     }

@@ -27,8 +27,12 @@ pub fn convert_ui_files(
     }
 
     if !res_dir.exists() || !res_dir.exists() {
-        fs::create_dir_all(&res_dir)
-            .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+        fs::create_dir_all(&res_dir).map_err(|e| {
+            Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+                path: res_dir.clone(),
+                source: e,
+            })
+        })?;
     }
 
     for input_file in &files.ui_list {
@@ -37,19 +41,29 @@ pub fn convert_ui_files(
             .and_then(|p| p.strip_prefix(&ui_dir).ok())
         {
             Some(p) => p,
-            None => return Err(Errcode::GeneralError(GeneralErrorKind::FileNameInvaild)),
+            None => {
+                return Err(Errcode::GeneralError(GeneralErrorKind::FileNameInvalid {
+                    name: input_file.clone(),
+                }));
+            }
         };
 
         let output_dir = res_dir.join(rel_path);
-        fs::create_dir_all(&output_dir)
-            .map_err(|_| Errcode::GeneralError(GeneralErrorKind::CreateFileFailed))?;
+        fs::create_dir_all(&output_dir).map_err(|e| {
+            Errcode::GeneralError(GeneralErrorKind::CreateFileFailed {
+                path: output_dir.clone(),
+                source: e,
+            })
+        })?;
 
         let output_file = output_dir.join(format!(
             "{}_ui.py",
             input_file
                 .file_stem()
                 .and_then(|s| s.to_str())
-                .ok_or(Errcode::GeneralError(GeneralErrorKind::FileNameInvaild))?
+                .ok_or(Errcode::GeneralError(GeneralErrorKind::FileNameInvalid {
+                    name: input_file.clone(),
+                }))?
         ));
 
         let key = input_file.to_string_lossy().to_string();

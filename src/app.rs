@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::actions;
 use crate::cli::{Command, init_logger, parse_cli};
 use crate::errcode::{Errcode, GeneralErrorKind};
@@ -9,8 +11,13 @@ pub fn run() -> Result<(), Errcode> {
 
     if let Some(path) = &args.work_dir {
         log::info!("Working directory set to {} .", path);
-        let _ = std::env::set_current_dir(path)
-            .map_err(|_| Errcode::GeneralError(GeneralErrorKind::WorkDirNotFound));
+        let work_path = PathBuf::from(path);
+        let _ = std::env::set_current_dir(&work_path).map_err(|e| {
+            Errcode::GeneralError(GeneralErrorKind::WorkDirNotFound {
+                path: work_path,
+                source: e,
+            })
+        });
     };
 
     match args.command {

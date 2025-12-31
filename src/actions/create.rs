@@ -40,20 +40,33 @@ pub fn action(name: String) -> Result<(), Errcode> {
 
     let project_path = Path::new(&project_name);
     let pyproject_file = project_path.join("pyproject.toml");
-    let toml_text = std::fs::read_to_string(&pyproject_file)
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::ReadFileFailed))?;
+    let toml_text = std::fs::read_to_string(&pyproject_file).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::ReadFileFailed {
+            path: pyproject_file.clone(),
+            source: e,
+        })
+    })?;
     let mut doc = toml_text
         .parse::<DocumentMut>()
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::ReadFileFailed))?;
+        .map_err(|e| Errcode::GeneralError(GeneralErrorKind::TomlParseFailed { source: e }))?;
 
     doc["project"]["name"] = value(&project_name);
 
-    std::fs::write(&pyproject_file, doc.to_string())
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::ReadFileFailed))?;
+    std::fs::write(&pyproject_file, doc.to_string()).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::WriteFileFailed {
+            path: pyproject_file.clone(),
+            source: e,
+        })
+    })?;
 
     log::debug!("Remove old .git directory.");
-    std::fs::remove_dir_all(&project_path.join(".git"))
-        .map_err(|_| Errcode::GeneralError(GeneralErrorKind::MoveFileFailed))?;
+    let git_dir = project_path.join(".git");
+    std::fs::remove_dir_all(&git_dir).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::RemoveFileFailed {
+            path: git_dir,
+            source: e,
+        })
+    })?;
 
     log::info!("Initializing new git repository.");
     run_and_wait!(
