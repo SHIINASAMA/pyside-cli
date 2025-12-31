@@ -3,7 +3,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use serde::Deserialize;
 
-use crate::errcode::Errcode;
+use crate::errcode::{Errcode, GeneralErrorKind};
 
 #[derive(Debug, Deserialize)]
 struct PyProject {
@@ -54,10 +54,12 @@ use crate::errcode::PyProjectErrorKind;
 
 impl PyProjectConfig {
     pub fn new(path: PathBuf) -> Result<Self, Errcode> {
-        let toml_content = read_to_string(path)
-            .map_err(|_| Errcode::PyProjectConfigError(PyProjectErrorKind::ReadFaild))?;
-        let cfg: PyProject = toml::from_str(&toml_content)
-            .map_err(|_| Errcode::PyProjectConfigError(PyProjectErrorKind::ParseFailed))?;
+        let toml_content = read_to_string(&path).map_err(|e| {
+            Errcode::GeneralError(GeneralErrorKind::ReadFileFailed { path, source: e })
+        })?;
+        let cfg: PyProject = toml::from_str(&toml_content).map_err(|e| {
+            Errcode::PyProjectConfigError(PyProjectErrorKind::ParseFailed { source: e })
+        })?;
 
         let platform = std::env::consts::OS;
 
@@ -103,7 +105,9 @@ fn parse_scripts(config: &PyProject) -> Result<HashMap<String, PathBuf>, Errcode
         Some(scripts) => scripts,
         None => {
             return Err(Errcode::PyProjectConfigError(
-                PyProjectErrorKind::FieldNotFound,
+                PyProjectErrorKind::FieldNotFound {
+                    field: "scripts".to_string(),
+                },
             ));
         }
     };
@@ -116,7 +120,9 @@ fn parse_scripts(config: &PyProject) -> Result<HashMap<String, PathBuf>, Errcode
 
         if package_name.is_empty() {
             return Err(Errcode::PyProjectConfigError(
-                PyProjectErrorKind::FieldNotFound,
+                PyProjectErrorKind::FieldInvalid {
+                    field: package_name,
+                },
             ));
         }
 

@@ -1,4 +1,4 @@
-use std::{fmt, path::PathBuf};
+use std::path::PathBuf;
 
 use thiserror::Error;
 
@@ -44,42 +44,55 @@ pub enum GeneralErrorKind {
     },
     #[error("File name is invalid: {name:?}")]
     FileNameInvalid { name: PathBuf },
+}
+
+#[derive(Debug, Error)]
+pub enum PyProjectErrorKind {
     #[error("Failed to parse TOML file")]
-    TomlParseFailed {
+    ParseFailed {
+        #[source]
+        source: toml::de::Error,
+    },
+    #[error("Failed to parse TOML file")]
+    TomlEditParseFailed {
         #[source]
         source: toml_edit::TomlError,
     },
+    #[error("Field not found")]
+    FieldNotFound { field: String },
+    #[error("Field is invalid")]
+    FieldInvalid { field: String },
 }
 
-#[derive(Debug, Copy, Clone)]
-pub enum PyProjectErrorKind {
-    ReadFaild,
-    ParseFailed,
-    FieldNotFound,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum CacheErrorKind {
-    SaveFailed,
-}
-
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Error)]
 pub enum ToolchainErrorKind {
+    #[error("LRelease update not found")]
     LReleaseUpdateNotFound,
+    #[error("Uic not found")]
     UicNotFound,
+    #[error("Rcc not found")]
     RccNotFound,
+    #[error("Git not found")]
     GitNotFound,
+    #[error("Nuitka not found")]
     NuitkaNotFound,
+    #[error("PyInstaller not found")]
     PyInstallerNotFound,
+    #[error("PyTest not found")]
     PyTestNotFound,
-    LUpdateFailed,
-    LReleaseFailed,
-    UicFailed,
-    RccFailed,
-    GitFailed,
-    NuitkaFailed,
-    PyInstallerFailed,
-    PyTestFailed,
+
+    #[error("{execution_name} execution failed")]
+    ExecutionFailed {
+        execution_name: String,
+        #[source]
+        source: std::io::Error,
+    },
+
+    #[error("{execution_name} execution failed with non-zero exit status")]
+    NonZeroExit {
+        execution_name: String,
+        exit_status: std::process::ExitStatus,
+    },
 }
 
 #[derive(Debug)]
@@ -87,17 +100,7 @@ pub enum ToolchainErrorKind {
 pub enum Errcode {
     GeneralError(GeneralErrorKind),
     PyProjectConfigError(PyProjectErrorKind),
-    CacheError(CacheErrorKind),
     ToolchainError(ToolchainErrorKind),
-}
-
-impl fmt::Display for Errcode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self {
-            // Errcode::InvalidArgument(arg) => write!(f, "Invalid argument: {}", arg),
-            _ => write!(f, "{:?}", self),
-        }
-    }
 }
 
 pub fn exit_with_error(result: Result<(), Errcode>) {

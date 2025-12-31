@@ -35,9 +35,27 @@ pub fn format_duration(d: Duration) -> String {
 }
 
 #[macro_export]
-macro_rules! run_and_wait {
-    ($cmd:expr, $e:expr) => {{
-        let mut child = $cmd.spawn().map_err(|_| $e)?;
-        child.wait().map_err(|_| $e)
+macro_rules! run_tool {
+    ($name:expr, $cmd:expr) => {{
+        let mut child = $cmd.spawn().map_err(|e| {
+            Errcode::ToolchainError(ToolchainErrorKind::ExecutionFailed {
+                execution_name: $name.to_string_lossy().to_string(),
+                source: e,
+            })
+        })?;
+
+        let status = child.wait().map_err(|e| {
+            Errcode::ToolchainError(ToolchainErrorKind::ExecutionFailed {
+                execution_name: $name.to_string_lossy().to_string(),
+                source: e,
+            })
+        })?;
+
+        if !status.success() {
+            return Err(Errcode::ToolchainError(ToolchainErrorKind::NonZeroExit {
+                execution_name: $name.to_string_lossy().to_string(),
+                exit_status: status,
+            }));
+        }
     }};
 }

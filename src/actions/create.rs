@@ -3,8 +3,8 @@ use std::{env::current_dir, path::Path, process::Command};
 use toml_edit::{DocumentMut, value};
 
 use crate::{
-    errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
-    run_and_wait,
+    errcode::{Errcode, GeneralErrorKind, PyProjectErrorKind, ToolchainErrorKind},
+    run_tool,
     toolchain::Toolchain,
 };
 
@@ -30,13 +30,13 @@ pub fn action(name: String) -> Result<(), Errcode> {
 
     log::info!("Creating project: {}.", project_name);
 
-    run_and_wait!(
+    run_tool!(
+        &git,
         Command::new(&git)
             .arg("clone")
             .arg("https://github.com/SHIINASAMA/pyside_template.git")
-            .arg(&dst),
-        Errcode::ToolchainError(ToolchainErrorKind::GitFailed)
-    )?;
+            .arg(&dst)
+    );
 
     let project_path = Path::new(&project_name);
     let pyproject_file = project_path.join("pyproject.toml");
@@ -46,9 +46,9 @@ pub fn action(name: String) -> Result<(), Errcode> {
             source: e,
         })
     })?;
-    let mut doc = toml_text
-        .parse::<DocumentMut>()
-        .map_err(|e| Errcode::GeneralError(GeneralErrorKind::TomlParseFailed { source: e }))?;
+    let mut doc = toml_text.parse::<DocumentMut>().map_err(|e| -> Errcode {
+        Errcode::PyProjectConfigError(PyProjectErrorKind::TomlEditParseFailed { source: e })
+    })?;
 
     doc["project"]["name"] = value(&project_name);
 
@@ -69,10 +69,11 @@ pub fn action(name: String) -> Result<(), Errcode> {
     })?;
 
     log::info!("Initializing new git repository.");
-    run_and_wait!(
-        Command::new(&git).arg("init").current_dir(&project_path),
-        Errcode::ToolchainError(ToolchainErrorKind::GitFailed)
-    )?;
+
+    run_tool!(
+        &git,
+        Command::new(&git).arg("init").current_dir(&project_path)
+    );
 
     log::info!("Project created successfully.");
 

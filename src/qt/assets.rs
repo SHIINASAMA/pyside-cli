@@ -11,7 +11,7 @@ use crate::{
     cache::Cache,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
-    run_and_wait,
+    run_tool,
 };
 
 macro_rules! my_write {
@@ -177,15 +177,14 @@ pub fn compile_resources(
                 source: e,
             })
         })?;
-    }
-
-    run_and_wait!(
+    };
+    run_tool!(
+        &rcc,
         Command::new(&rcc)
             .arg(root.join("resources").join("assets.qrc"))
             .arg("-o")
-            .arg(py_res_file),
-        Errcode::ToolchainError(ToolchainErrorKind::RccFailed)
-    )?;
+            .arg(py_res_file)
+    );
 
     touch_version_py(&res_dir, git)?;
     touch_init_py(&res_dir)?;

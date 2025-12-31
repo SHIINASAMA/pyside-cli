@@ -4,7 +4,7 @@ use crate::{
     builder::{builder::Builder, nuitka::NuitkaBuilder, pyinstaller::PyInstallerBuilder},
     cache::{Cache, load_cache, save_cache},
     cli::{Backend, BuildOptions, BuildStage},
-    errcode::{CacheErrorKind, Errcode, GeneralErrorKind, ToolchainErrorKind},
+    errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
     pyproject::PyProjectConfig,
     qt::{assets::compile_resources, i18n::compile_i18n_ts_files, ui::convert_ui_files},
@@ -89,7 +89,12 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
         log::info!("Assets compiled in {}.", format_duration(start.elapsed()));
     }
 
-    save_cache(&cache).map_err(|_| Errcode::CacheError(CacheErrorKind::SaveFailed))?;
+    save_cache(&cache).map_err(|e| {
+        Errcode::GeneralError(GeneralErrorKind::WriteFileFailed {
+            path: "Cache".into(),
+            source: e,
+        })
+    })?;
 
     // Build via backend
     if matches!(opt.stage, BuildStage::Build | BuildStage::All) {

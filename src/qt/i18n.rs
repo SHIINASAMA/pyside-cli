@@ -1,7 +1,7 @@
 use std::{fs, path::Path, process::Command};
 
 use crate::errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind};
-use crate::run_and_wait;
+use crate::run_tool;
 use crate::{cache::Cache, files::Files};
 
 pub fn generate_i18n_ts_files(
@@ -26,7 +26,8 @@ pub fn generate_i18n_ts_files(
     for lang in languages {
         let ts_file = i18n_dir.join(format!("{}.ts", lang));
         log::info!("Generating {} ...", ts_file.display());
-        run_and_wait!(
+        run_tool!(
+            &lupdate,
             Command::new(lupdate)
                 .arg("-silent")
                 .arg("-locations")
@@ -36,9 +37,8 @@ pub fn generate_i18n_ts_files(
                 .args(&files.source_list)
                 .args(&files.ui_list)
                 .arg("-ts")
-                .arg(ts_file.clone()),
-            Errcode::ToolchainError(ToolchainErrorKind::LUpdateFailed)
-        )?;
+                .arg(ts_file.clone())
+        );
 
         log::info!("Generated translation file: {}", ts_file.display())
     }
@@ -80,13 +80,10 @@ pub fn compile_i18n_ts_files(
         let qm_file = qm_root.join(format!("{}.qm", qm_filename.to_string_lossy()));
         log::info!("Compiling {} to {}.", ts_file.display(), qm_file.display());
 
-        run_and_wait!(
-            Command::new(&lrelease)
-                .arg(ts_file)
-                .arg("-qm")
-                .arg(&qm_file),
-            Errcode::ToolchainError(ToolchainErrorKind::LReleaseFailed)
-        )?;
+        run_tool!(
+            &lrelease,
+            Command::new(lrelease).arg(ts_file).arg("-qm").arg(&qm_file)
+        );
 
         log::info!("Compiled .qm file: {}.", qm_file.display());
     }

@@ -4,7 +4,7 @@ use crate::{
     cache::Cache,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
-    run_and_wait,
+    run_tool,
 };
 
 pub fn convert_ui_files(
@@ -73,13 +73,13 @@ pub fn convert_ui_files(
             continue;
         }
 
-        run_and_wait!(
+        run_tool!(
+            &uic,
             Command::new(uic)
                 .arg(input_file)
                 .arg("-o")
-                .arg(&output_file),
-            Errcode::ToolchainError(ToolchainErrorKind::UicFailed)
-        )?;
+                .arg(&output_file)
+        );
 
         log::info!(
             "Converted {} to {}.",
