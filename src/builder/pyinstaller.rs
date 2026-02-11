@@ -22,22 +22,21 @@ impl PyInstallerBuilder {
         target_name: &str,
         target_dir: &str,
         pyinstaller_exec: &Path,
-        onefile: bool, // todo: build type
-        // build_type: BuildType,
+        build_type: BuildType,
         extra_options: Vec<String>,
-    ) -> Self {
-        let work_dir = if onefile {
-            "build/pyinstaller_onefile_build"
-        } else {
-            "build/pyinstaller_onedir_build"
+    ) -> Result<Self, Errcode> {
+        let (build_type_str, work_dir) = match build_type {
+            BuildType::Onefile => ("--onefile", "build/pyinstaller_onefile_build"),
+            BuildType::Onedir => ("--onedir", "build/pyinstaller_onedir_build"),
+            BuildType::Bundle => {
+                return Err(Errcode::ToolchainError(
+                    ToolchainErrorKind::PyInstallerUnsupportedBundle,
+                ));
+            }
         };
 
         let mut options = vec![
-            if onefile {
-                "--onefile".into()
-            } else {
-                "--onedir".into()
-            },
+            build_type_str.into(),
             "--distpath".into(),
             "build".into(),
             "--workpath".into(),
@@ -54,12 +53,12 @@ impl PyInstallerBuilder {
 
         log::debug!("Build options: {:?}", options);
 
-        PyInstallerBuilder {
+        Ok(PyInstallerBuilder {
             target_name: target_name.to_string(),
             _target_dir: target_dir.to_string(),
             exec: pyinstaller_exec.to_path_buf(),
             options: options,
-        }
+        })
     }
 }
 

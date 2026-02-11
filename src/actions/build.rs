@@ -98,6 +98,7 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
 
     // Build via backend
     if matches!(opt.stage, BuildStage::Build | BuildStage::All) {
+        let build_type = opt.resolve_build_type();
         let backend: Box<dyn Builder> = match &opt.backend {
             Backend::Nuitka => {
                 let nuitka_exe = match &toolchain.nuitka {
@@ -107,7 +108,6 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
                     }
                 };
 
-                let build_type = opt.resolve_build_type();
                 let mut extra_opts = opt.backend_args;
                 #[cfg(target_os = "macos")]
                 {
@@ -157,13 +157,15 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
                 let mut extra_opts = opt.backend_args;
                 extra_opts.extend(pyproject_config.extra_pyinstaller_options_list);
 
-                Box::new(PyInstallerBuilder::new(
+                let builder = PyInstallerBuilder::new(
                     &opt.target,
                     target_path.to_string_lossy().to_string().as_str(),
                     &pyinstaller_exe,
-                    opt.onefile,
+                    build_type,
                     extra_opts,
-                ))
+                )?;
+
+                Box::new(builder)
             }
         };
 

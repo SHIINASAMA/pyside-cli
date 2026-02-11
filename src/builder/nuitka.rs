@@ -39,16 +39,15 @@ impl NuitkaBuilder {
         ];
 
         match build_type {
-            BuildType::Onedir => {
+            BuildType::Onefile => {
                 options.push("--onefile".into());
             }
-            BuildType::Onefile => {
+            BuildType::Onedir => {
                 options.push("--standalone".into());
             }
             BuildType::Bundle => {
                 #[cfg(not(target_os = "macos"))]
                 {
-                    // never reach here
                     return Err(Errcode::GeneralError(GeneralErrorKind::UnsupportedPlatform));
                 }
             }

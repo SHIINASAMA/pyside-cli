@@ -45,6 +45,7 @@ pub enum GeneralErrorKind {
     #[error("File name is invalid: {name:?}")]
     FileNameInvalid { name: PathBuf },
     #[error("Unsupported platform")]
+    #[allow(dead_code)]
     UnsupportedPlatform,
 }
 
@@ -80,6 +81,8 @@ pub enum ToolchainErrorKind {
     NuitkaNotFound,
     #[error("PyInstaller not found")]
     PyInstallerNotFound,
+    #[error("PyInstaller unsupported bundle")]
+    PyInstallerUnsupportedBundle,
     #[error("PyTest not found")]
     PyTestNotFound,
 
