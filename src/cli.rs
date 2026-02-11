@@ -69,13 +69,17 @@ pub struct BuildOptions {
     #[arg(long, value_enum, default_value_t = BuildStage::All)]
     pub stage: BuildStage,
 
-    /// Create a single executable file.
+    /// Compatibility flag. Equivalent to `--build-type onefile`
     #[arg(long, conflicts_with = "onedir")]
     pub onefile: bool,
 
-    /// Create a directory with the executable and all dependencies.
+    /// Compatibility flag. Equivalent to `--build-type onedir`
     #[arg(long, conflicts_with = "onefile")]
     pub onedir: bool,
+
+    /// Final build output type
+    #[arg(long, value_enum)]
+    pub build_type: Option<BuildType>,
 
     /// Build target (default: App).
     #[arg(short, long, value_name = "TARGET", default_value_t = String::from("App"))]
@@ -93,6 +97,52 @@ pub struct BuildOptions {
     #[arg(last = true)]
     pub backend_args: Vec<String>,
 }
+
+impl BuildOptions {
+    /// Resolves the final build type based on user input.
+    ///
+    /// Priority order:
+    /// 1. Compatibility flags (`--onefile` / `--onedir`)
+    /// 2. Explicit `--build-type` argument
+    /// 3. Fallback to default (Onedir)
+    ///
+    /// This design allows us to:
+    /// - Distinguish between "user did not specify" and "user explicitly chose"
+    /// - Keep backward compatibility with legacy flags
+    /// - Centralize decision logic in one place
+    pub fn resolve_build_type(&self) -> BuildType {
+        // Compatibility flags take highest priority
+        if self.onefile {
+            return BuildType::Onefile;
+        }
+
+        if self.onedir {
+            return BuildType::Onedir;
+        }
+
+        // Explicit --build-type argument
+        if let Some(bt) = &self.build_type {
+            return bt.clone();
+        }
+
+        // Default fallback when nothing is specified
+        BuildType::Onedir
+    }
+}
+
+
+#[derive(ValueEnum, Debug, Clone)]
+pub enum BuildType {
+    /// Build as a single executable file.
+    Onefile,
+
+    /// Build into a directory.
+    Onedir,
+
+    /// Build as a macOS app bundle.
+    Bundle,
+}
+
 
 #[derive(ValueEnum, Debug, Clone)]
 pub enum BuildStage {

@@ -21,7 +21,7 @@ impl PyInstallerBuilder {
         target_name: &str,
         target_dir: &str,
         pyinstaller_exec: &Path,
-        onefile: bool,
+        onefile: bool, // todo: build type
         extra_options: Vec<String>,
     ) -> Self {
         let work_dir = if onefile {

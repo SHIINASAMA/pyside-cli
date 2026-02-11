@@ -24,7 +24,7 @@ impl NuitkaBuilder {
         target_name: &str,
         target_dir: &str,
         nuitka_exe: &Path,
-        onefile: bool,
+        onefile: bool, // todo: build type
         extra_options: Vec<String>,
     ) -> Self {
         let n = thread::available_parallelism()
