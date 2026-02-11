@@ -44,6 +44,8 @@ pub enum GeneralErrorKind {
     },
     #[error("File name is invalid: {name:?}")]
     FileNameInvalid { name: PathBuf },
+    #[error("Unsupported platform")]
+    UnsupportedPlatform,
 }
 
 #[derive(Debug, Error)]

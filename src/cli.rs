@@ -130,8 +130,7 @@ impl BuildOptions {
     }
 }
 
-
-#[derive(ValueEnum, Debug, Clone)]
+#[derive(ValueEnum, Debug, Clone, PartialEq, Eq)]
 pub enum BuildType {
     /// Build as a single executable file.
     Onefile,
@@ -142,7 +141,6 @@ pub enum BuildType {
     /// Build as a macOS app bundle.
     Bundle,
 }
-
 
 #[derive(ValueEnum, Debug, Clone)]
 pub enum BuildStage {

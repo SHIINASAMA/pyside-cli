@@ -5,6 +5,7 @@ use std::{
 
 use crate::{
     builder::builder::Builder,
+    cli::BuildType,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     run_tool,
 };
@@ -22,6 +23,7 @@ impl PyInstallerBuilder {
         target_dir: &str,
         pyinstaller_exec: &Path,
         onefile: bool, // todo: build type
+        // build_type: BuildType,
         extra_options: Vec<String>,
     ) -> Self {
         let work_dir = if onefile {

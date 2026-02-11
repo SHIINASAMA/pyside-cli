@@ -7,6 +7,7 @@ use std::{
 
 use crate::{
     builder::builder::Builder,
+    cli::BuildType,
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     run_tool,
 };
@@ -15,7 +16,7 @@ pub struct NuitkaBuilder {
     target_name: String,
     target_dir: String,
     exec: PathBuf,
-    onefile: bool,
+    build_type: BuildType,
     options: Vec<String>,
 }
 
@@ -24,9 +25,9 @@ impl NuitkaBuilder {
         target_name: &str,
         target_dir: &str,
         nuitka_exe: &Path,
-        onefile: bool, // todo: build type
+        build_type: BuildType,
         extra_options: Vec<String>,
-    ) -> Self {
+    ) -> Result<Self, Errcode> {
         let n = thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(1);
@@ -34,25 +35,36 @@ impl NuitkaBuilder {
             "--output-dir=build".into(),
             "--output-filename=App".into(),
             target_dir.to_string(),
-            if onefile {
-                "--onefile".into()
-            } else {
-                "--standalone".into()
-            },
             format!("--jobs={}", n),
         ];
+
+        match build_type {
+            BuildType::Onedir => {
+                options.push("--onefile".into());
+            }
+            BuildType::Onefile => {
+                options.push("--standalone".into());
+            }
+            BuildType::Bundle => {
+                #[cfg(not(target_os = "macos"))]
+                {
+                    // never reach here
+                    return Err(Errcode::GeneralError(GeneralErrorKind::UnsupportedPlatform));
+                }
+            }
+        };
 
         options.extend(extra_options);
 
         log::debug!("Build options: {:?}", options);
 
-        NuitkaBuilder {
+        Ok(NuitkaBuilder {
             target_name: target_name.to_string(),
             target_dir: target_dir.to_string(),
             exec: nuitka_exe.to_path_buf(),
-            onefile: onefile,
+            build_type: build_type,
             options: options,
-        }
+        })
     }
 }
 
@@ -91,7 +103,7 @@ impl Builder for NuitkaBuilder {
         let build_dir = Path::new("build");
         let old_target = build_dir.join(format!("{}.dist", &self.target_dir));
         let new_target = build_dir.join(&self.target_name);
-        if !self.onefile {
+        if self.build_type != BuildType::Onefile {
             log::debug!(
                 "Renaming {} to {}.",
                 old_target.display(),

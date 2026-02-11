@@ -129,7 +129,7 @@ fn touch_version_py(resources_dir: &Path, git: &Path) -> Result<(), Errcode> {
     Ok(())
 }
 
-fn get_last_tag(git: &Path, default: &str) -> String {
+pub fn get_last_tag(git: &Path, default: &str) -> String {
     let output = Command::new(git)
         .args(["describe", "--tags", "--abbrev=0", "--first-parent"])
         .stderr(Stdio::null())

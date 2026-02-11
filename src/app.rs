@@ -23,10 +23,7 @@ pub fn run() -> Result<(), Errcode> {
     match args.command {
         Command::Targets => actions::targets::action()?,
         Command::I18n(opt) => actions::i18n::action(opt)?,
-        Command::Build(opt) => {
-            opt.resolve_build_type();
-            actions::build::action(opt)?
-        },
+        Command::Build(opt) => actions::build::action(opt)?,
         Command::Test(opt) => actions::test::action(opt)?,
         Command::Create { name } => actions::create::action(name)?,
         Command::Completions { shell } => actions::completions::action(shell),

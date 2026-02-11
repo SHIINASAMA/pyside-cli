@@ -3,7 +3,7 @@ use std::time::Instant;
 use crate::{
     builder::{builder::Builder, nuitka::NuitkaBuilder, pyinstaller::PyInstallerBuilder},
     cache::{Cache, load_cache, save_cache},
-    cli::{Backend, BuildOptions, BuildStage},
+    cli::{Backend, BuildOptions, BuildStage, BuildType},
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
     pyproject::PyProjectConfig,
@@ -106,16 +106,44 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
                         return Err(Errcode::ToolchainError(ToolchainErrorKind::NuitkaNotFound));
                     }
                 };
+
+                let build_type = opt.resolve_build_type();
                 let mut extra_opts = opt.backend_args;
+                #[cfg(target_os = "macos")]
+                {
+                    // TODO: Bundle-specific options should be handled inside the Nuitka builder.
+                    use mac::{BundleInfo, add_mac_options};
+                    if build_type == BuildType::Bundle {
+                        use crate::qt::assets::get_last_tag;
+
+                        let git_exe = match &toolchain.git {
+                            Some(git) => git.clone(),
+                            None => {
+                                return Err(Errcode::ToolchainError(
+                                    ToolchainErrorKind::GitNotFound,
+                                ));
+                            }
+                        };
+                        let version = get_last_tag(&git_exe, "0.0.0.0");
+                        let target_name = opt.target.clone();
+                        let bundle_info = BundleInfo {
+                            name: target_name,
+                            version: version,
+                        };
+                        add_mac_options(&mut extra_opts, bundle_info);
+                    }
+                }
                 extra_opts.extend(pyproject_config.extra_nuitka_options_list);
 
-                Box::new(NuitkaBuilder::new(
+                let builder = NuitkaBuilder::new(
                     &opt.target,
                     target_path.to_string_lossy().to_string().as_str(),
                     &nuitka_exe,
-                    opt.onefile,
+                    build_type,
                     extra_opts,
-                ))
+                )?;
+
+                Box::new(builder)
             }
             Backend::Pyinstaller => {
                 let pyinstaller_exe = match &toolchain.pyinstaller {
@@ -148,4 +176,17 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
     }
 
     Ok(())
+}
+
+#[cfg(target_os = "macos")]
+mod mac {
+    pub struct BundleInfo {
+        pub name: String,
+        pub version: String,
+    }
+
+    pub fn add_mac_options(options: &mut Vec<String>, bundle: BundleInfo) {
+        options.push(format!("--macos-app-name={}", bundle.name));
+        options.push(format!("--macos-app-version={}", bundle.version));
+    }
 }
