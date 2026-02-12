@@ -27,6 +27,7 @@ impl NuitkaBuilder {
         nuitka_exe: &Path,
         build_type: BuildType,
         extra_options: Vec<String>,
+        #[cfg(target_os = "macos")] bundle_info: Option<mac::BundleInfo>,
     ) -> Result<Self, Errcode> {
         let n = thread::available_parallelism()
             .map(|n| n.get())
@@ -38,6 +39,26 @@ impl NuitkaBuilder {
             format!("--jobs={}", n),
         ];
 
+        #[cfg(target_os = "macos")]
+        match build_type {
+            BuildType::Bundle => {
+                if let Some(info) = bundle_info {
+                    mac::add_mac_options(&mut options, info);
+                } else {
+                    // never reach here
+                    assert!(false);
+                }
+            }
+            BuildType::Onefile | BuildType::Onedir => {
+                return Err(Errcode::GeneralError(
+                    GeneralErrorKind::UnsupportedPlatform {
+                        msg: "Only bundle build is supported on macOS".into(),
+                    },
+                ));
+            }
+        }
+
+        #[cfg(not(target_os = "macos"))]
         match build_type {
             BuildType::Onefile => {
                 options.push("--onefile".into());
@@ -46,12 +67,13 @@ impl NuitkaBuilder {
                 options.push("--standalone".into());
             }
             BuildType::Bundle => {
-                #[cfg(not(target_os = "macos"))]
-                {
-                    return Err(Errcode::GeneralError(GeneralErrorKind::UnsupportedPlatform));
-                }
+                return Err(Errcode::GeneralError(
+                    GeneralErrorKind::UnsupportedPlatform {
+                        msg: "Bundle build is only supported on macOS".into(),
+                    },
+                ));
             }
-        };
+        }
 
         options.extend(extra_options);
 
@@ -102,7 +124,7 @@ impl Builder for NuitkaBuilder {
         let build_dir = Path::new("build");
         let old_target = build_dir.join(format!("{}.dist", &self.target_dir));
         let new_target = build_dir.join(&self.target_name);
-        if self.build_type != BuildType::Onefile {
+        if self.build_type == BuildType::Onedir {
             log::debug!(
                 "Renaming {} to {}.",
                 old_target.display(),
@@ -117,5 +139,19 @@ impl Builder for NuitkaBuilder {
             })?;
         }
         Ok(())
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub mod mac {
+    pub struct BundleInfo {
+        pub name: String,
+        pub version: String,
+    }
+
+    pub fn add_mac_options(options: &mut Vec<String>, bundle: BundleInfo) {
+        options.push("--macos-create-app-bundle".into());
+        options.push(format!("--macos-app-name={}", bundle.name));
+        options.push(format!("--macos-app-version={}", bundle.version));
     }
 }
