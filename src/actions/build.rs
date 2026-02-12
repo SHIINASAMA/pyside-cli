@@ -3,7 +3,7 @@ use std::time::Instant;
 use crate::{
     builder::{builder::Builder, nuitka::NuitkaBuilder, pyinstaller::PyInstallerBuilder},
     cache::{Cache, load_cache, save_cache},
-    cli::{Backend, BuildOptions, BuildStage, BuildType},
+    cli::{Backend, BuildOptions, BuildStage},
     errcode::{Errcode, GeneralErrorKind, ToolchainErrorKind},
     files::Files,
     pyproject::PyProjectConfig,
@@ -111,6 +111,7 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
 
                 #[cfg(target_os = "macos")]
                 {
+                    use crate::cli::BuildType;
                     use crate::builder::nuitka::mac::BundleInfo;
 
                     let bundle_info = if matches!(build_type, BuildType::Bundle) {
