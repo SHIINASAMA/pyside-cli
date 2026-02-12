@@ -78,8 +78,14 @@ pub struct BuildOptions {
     pub onedir: bool,
 
     /// Final build output type
-    #[arg(long, value_enum)]
-    pub build_type: Option<BuildType>,
+    #[cfg(not(target_os = "macos"))]
+    #[arg(long, value_enum, default_value_t = BuildType::Onefile)]
+    pub build_type: BuildType,
+
+    /// Final build output type
+    #[cfg(target_os = "macos")]
+    #[arg(long, value_enum, default_value_t = BuildType::Bundle)]
+    pub build_type: BuildType,
 
     /// Build target (default: App).
     #[arg(short, long, value_name = "TARGET", default_value_t = String::from("App"))]
@@ -120,13 +126,8 @@ impl BuildOptions {
             return BuildType::Onedir;
         }
 
-        // Explicit --build-type argument
-        if let Some(bt) = &self.build_type {
-            return bt.clone();
-        }
-
         // Default fallback when nothing is specified
-        BuildType::Onedir
+        self.build_type.clone()
     }
 }
 
