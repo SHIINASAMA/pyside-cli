@@ -111,25 +111,19 @@ pub fn action(opt: BuildOptions) -> Result<(), Errcode> {
 
                 #[cfg(target_os = "macos")]
                 {
-                    use crate::cli::BuildType;
                     use crate::builder::nuitka::mac::BundleInfo;
+                    use crate::qt::assets::get_last_tag;
 
-                    let bundle_info = if matches!(build_type, BuildType::Bundle) {
-                        use crate::qt::assets::get_last_tag;
+                    let git_exe = toolchain
+                        .git
+                        .clone()
+                        .ok_or(Errcode::ToolchainError(ToolchainErrorKind::GitNotFound))?;
 
-                        let git_exe = toolchain
-                            .git
-                            .clone()
-                            .ok_or(Errcode::ToolchainError(ToolchainErrorKind::GitNotFound))?;
+                    let version = get_last_tag(&git_exe, "0.0.0.0");
 
-                        let version = get_last_tag(&git_exe, "0.0.0.0");
-
-                        Some(BundleInfo {
-                            name: opt.target.clone(),
-                            version,
-                        })
-                    } else {
-                        None
+                    let bundle_info = BundleInfo {
+                        name: opt.target.clone(),
+                        version,
                     };
 
                     let builder = NuitkaBuilder::new(

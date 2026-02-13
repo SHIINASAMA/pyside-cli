@@ -27,7 +27,7 @@ impl NuitkaBuilder {
         nuitka_exe: &Path,
         build_type: BuildType,
         extra_options: Vec<String>,
-        #[cfg(target_os = "macos")] bundle_info: Option<mac::BundleInfo>,
+        #[cfg(target_os = "macos")] bundle_info: mac::BundleInfo,
     ) -> Result<Self, Errcode> {
         let n = thread::available_parallelism()
             .map(|n| n.get())
@@ -41,13 +41,8 @@ impl NuitkaBuilder {
 
         #[cfg(target_os = "macos")]
         match build_type {
-            BuildType::Bundle => {
-                if let Some(info) = bundle_info {
-                    mac::add_mac_options(&mut options, info);
-                } else {
-                    // never reach here
-                    assert!(false);
-                }
+            BuildType::Bundle => {    
+                mac::add_mac_options(&mut options, bundle_info);
             }
             BuildType::Onefile | BuildType::Onedir => {
                 return Err(Errcode::GeneralError(
