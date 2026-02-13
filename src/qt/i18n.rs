@@ -67,11 +67,7 @@ pub fn compile_i18n_ts_files(
             }));
         };
 
-        let key = ts_file
-            .strip_prefix(root)
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
+        let key = ts_file.to_string_lossy();
 
         if !cache.check_i18n_file(&key) {
             log::info!("{} is up to date.", key);
