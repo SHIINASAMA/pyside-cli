@@ -34,14 +34,14 @@ impl NuitkaBuilder {
             .unwrap_or(1);
         let mut options = vec![
             "--output-dir=build".into(),
-            "--output-filename=App".into(),
+            format!("--output-filename={}", target_name),
             target_dir.to_string(),
             format!("--jobs={}", n),
         ];
 
         #[cfg(target_os = "macos")]
         match build_type {
-            BuildType::Bundle => {    
+            BuildType::Bundle => {
                 mac::add_mac_options(&mut options, bundle_info);
             }
             BuildType::Onefile | BuildType::Onedir => {
@@ -117,14 +117,27 @@ impl Builder for NuitkaBuilder {
 
     fn post_build(&self) -> Result<(), Errcode> {
         let build_dir = Path::new("build");
-        let old_target = build_dir.join(format!("{}.dist", &self.target_dir));
-        let new_target = build_dir.join(&self.target_name);
+
         if self.build_type == BuildType::Onedir {
+            let old_target = build_dir.join(format!("{}.dist", &self.target_dir));
+            let new_target = build_dir.join(&self.target_name);
             log::debug!(
                 "Renaming {} to {}.",
                 old_target.display(),
                 new_target.display()
             );
+            fs::rename(&old_target, &new_target).map_err(|e| {
+                Errcode::GeneralError(GeneralErrorKind::MoveFileFailed {
+                    from: old_target,
+                    to: new_target,
+                    source: e,
+                })
+            })?;
+        }
+        #[cfg(target_os = "macos")]
+        if self.build_type == BuildType::Bundle {
+            let old_target = build_dir.join("app.app");
+            let new_target = build_dir.join(format!("{}.app", self.target_name));
             fs::rename(&old_target, &new_target).map_err(|e| {
                 Errcode::GeneralError(GeneralErrorKind::MoveFileFailed {
                     from: old_target,

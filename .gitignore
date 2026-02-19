@@ -1,3 +1,10 @@
+# macOS
+.DS_Store
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+
 # Python-generated files
 __pycache__/
 *.py[oc]
@@ -13,7 +20,7 @@ wheels/
 .idea/
 .vscode/
 .vs/
-.zed
+.zed/
 
 
 # Added by cargo
